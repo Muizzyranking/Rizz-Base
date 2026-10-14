@@ -16,6 +16,8 @@ import (
 // A conservative V1 limit on the encoded file, not on decrypted document size.
 const MaxFileSize = 64 << 20
 
+var ErrBusy = errors.New("project is busy or has a stale lock; check for another writer before removing the .lock directory")
+
 func Read(path, passphrase string) ([]byte, error) {
 	if err := validatePath(path); err != nil {
 		return nil, err
@@ -78,7 +80,7 @@ func Modify(path, passphrase string, mutate func([]byte) ([]byte, error)) error 
 	lockPath := path + ".lock"
 	if err := os.Mkdir(lockPath, 0700); err != nil {
 		if errors.Is(err, os.ErrExist) {
-			return errors.New("project is busy or has a stale lock; check for another writer before removing the .lock directory")
+			return ErrBusy
 		}
 		return fmt.Errorf("lock project: %w", err)
 	}

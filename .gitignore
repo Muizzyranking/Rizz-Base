@@ -1,4 +1,6 @@
 node_modules/
+/generated-artifacts/
+*.tgz
 /engine/bin/
 *.rizz
 .rizzbase-*
