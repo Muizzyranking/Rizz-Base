@@ -1,0 +1,1 @@
+- [Product scope](product-scope.md) — Local Go engine and TypeScript SDK, built incrementally; preserve the imported UI.

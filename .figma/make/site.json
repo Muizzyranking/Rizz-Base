@@ -1,0 +1,10 @@
+{
+  "description": "Rizzbase offers a vibrant, user-friendly database platform tailored for Gen Z, combining playful design with powerful features for effortless data management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
