@@ -23,5 +23,5 @@ same user. Do not use this V1 format for multi-user or network-hosted data.
 Do not report exploitable details in a public issue. Contact the repository
 owner privately through GitHub's security reporting feature if it is enabled.
 Until a private reporting channel is configured, avoid including real project
-files, passphrases, or sensitive user data in reports. There are no release
-artifacts or security response-time guarantees yet.
+files, passphrases, or sensitive user data in reports. Release binaries are
+published on GitHub; there are no security response-time guarantees.
