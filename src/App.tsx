@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { DocsContent, } from "./Docs";
+import { docs as docEntries } from "./docs";
 
-type Page = "home" | "dashboard" | "lobby" | "editor" | "auth" | "pricing";
+type Page = "home" | "dashboard" | "lobby" | "editor" | "auth" | "pricing" | "docs";
 type Theme = "light" | "dark";
 
 const repositoryUrl = "https://github.com/pazti/Rizz-Base";
-const sdkGuideUrl = `${repositoryUrl}/blob/main/docs/SDK.md`;
 
 const Icon = ({ name }: { name: string }) => {
   const paths: Record<string, ReactNode> = {
@@ -34,6 +35,10 @@ function Logo({ onClick }: { onClick?: () => void }) {
   );
 }
 
+function StarButton() {
+  return <a className="star-button" href={repositoryUrl} target="_blank" rel="noreferrer"><Icon name="github" /> <b>GITHUB</b></a>;
+}
+
 function ThemeToggle({ theme, toggle }: { theme: Theme; toggle: () => void }) {
   return (
     <button className="theme-toggle" onClick={toggle} type="button" aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
@@ -54,11 +59,11 @@ function Header({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (
       <Logo onClick={() => go("home")} />
       <nav>
         <button onClick={() => go("home")}>FEATURES</button>
-        <a href={sdkGuideUrl}>DOCS</a>
+        <button onClick={() => go("docs")}>DOCS</button>
         <button onClick={() => go("pricing")}>PRICING</button>
       </nav>
       <div className="header-actions">
-        <a className="star-button" href={repositoryUrl} target="_blank" rel="noreferrer"><Icon name="github" /> <b>GITHUB</b></a>
+        <StarButton />
         <ThemeToggle theme={theme} toggle={toggle} />
       </div>
     </header>
@@ -163,7 +168,7 @@ function BigBanner() {
 }
 
 function Footer({ go }: { go: (p: Page) => void }) {
-  return <footer><Logo onClick={() => go("home")} /><p>© 2026 Rizzbase. Made with zero chill.</p><div><a href={sdkGuideUrl}>Docs</a><a href={repositoryUrl} target="_blank" rel="noreferrer">GitHub</a><span>LOCAL-FIRST V1</span></div></footer>;
+  return <footer><Logo onClick={() => go("home")} /><p>© 2026 Rizzbase. Made with zero chill.</p><div><button onClick={() => go("docs")}>Docs</button><a href={repositoryUrl} target="_blank" rel="noreferrer">GitHub</a><span>LOCAL-FIRST V1</span></div></footer>;
 }
 
 function Sidebar({ active, go }: { active: string; go: (p: Page) => void }) {
@@ -174,10 +179,11 @@ function Sidebar({ active, go }: { active: string; go: (p: Page) => void }) {
       <nav>
         <small>WORKSPACE</small>
         <button className={active === "data" ? "active" : ""} onClick={() => go("dashboard")}><Icon name="data" /> Data</button>
-        <button><Icon name="data" /> Queries</button>
-        <button><Icon name="rules" /> Encryption</button>
+        <button onClick={() => { window.location.hash = "/docs/cli"; }}><Icon name="data" /> Queries</button>
+        <button onClick={() => { window.location.hash = "/docs/security"; }}><Icon name="rules" /> Encryption</button>
+        <button onClick={() => go("docs")}><Icon name="rules" /> Docs</button>
       </nav>
-      <div className="side-bottom"><button>? <span>Need help, bestie?</span></button><div><i>RB</i><span><b>Rizzbase</b><small>Local preview</small></span></div></div>
+      <div className="side-bottom"><button onClick={() => go("docs")}>? <span>Need help, bestie?</span></button><div><i>RB</i><span><b>Rizzbase</b><small>Local preview</small></span></div></div>
     </aside>
   );
 }
@@ -289,6 +295,24 @@ function Editor({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (
   );
 }
 
+function Docs({ theme, toggle, go, slug }: { theme: Theme; toggle: () => void; go: (p: Page) => void; slug: string }) {
+  return (
+    <>
+      <header className="docs-topbar">
+        <Logo onClick={() => go("home")} />
+        <div>
+          <StarButton />
+          <ThemeToggle theme={theme} toggle={toggle} />
+        </div>
+      </header>
+      <main className="docs-full">
+        <DocsContent slug={slug} onSelect={(next) => { window.location.hash = `/docs/${next}`; }} />
+      </main>
+      <Footer go={go} />
+    </>
+  );
+}
+
 function Auth({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p: Page) => void }) {
   return (
     <main className="auth-page">
@@ -322,14 +346,21 @@ function Pricing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
 
 export default function App() {
   const getPage = (): Page => {
-    const hash = window.location.hash.replace("#/", "") as Page;
-    return ["home", "dashboard", "lobby", "editor", "auth", "pricing"].includes(hash) ? hash : "home";
+    const hash = window.location.hash.replace("#/", "");
+    const root = hash.split("/")[0] as Page;
+    return ["home", "dashboard", "lobby", "editor", "auth", "pricing", "docs"].includes(root) ? root : "home";
+  };
+  const getDocSlug = (): string => {
+    const parts = window.location.hash.replace("#/", "").split("/");
+    const slug = parts[1] ?? "";
+    return docEntries.some((d) => d.slug === slug) ? slug : "overview";
   };
   const [page, setPage] = useState<Page>(getPage);
+  const [docSlug, setDocSlug] = useState<string>(getDocSlug);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("rizz-theme") as Theme) || "light");
 
   useEffect(() => {
-    const sync = () => setPage(getPage());
+    const sync = () => { setPage(getPage()); setDocSlug(getDocSlug()); };
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, []);
@@ -340,8 +371,9 @@ export default function App() {
   }, [theme]);
 
   const go = (next: Page) => {
-    window.location.hash = `/${next}`;
+    window.location.hash = next === "docs" ? "/docs/overview" : `/${next}`;
     setPage(next);
+    if (next === "docs") setDocSlug("overview");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const toggle = () => setTheme(theme === "light" ? "dark" : "light");
@@ -351,5 +383,6 @@ export default function App() {
   if (page === "editor") return <Editor theme={theme} toggle={toggle} go={go} />;
   if (page === "auth") return <Auth theme={theme} toggle={toggle} go={go} />;
   if (page === "pricing") return <Pricing theme={theme} toggle={toggle} go={go} />;
+  if (page === "docs") return <Docs theme={theme} toggle={toggle} go={go} slug={docSlug} />;
   return <Landing theme={theme} toggle={toggle} go={go} />;
 }
