@@ -31,16 +31,14 @@ engine binary for macOS, Linux or Windows on x64 or arm64. Later calls use the
 verified local cache. Downloads come from versioned GitHub releases and are
 checked against the release's SHA-256 manifest.
 
-The `rizzbase@1.0.0` package is published on npm, and the matching `v1.0.0`
+The `rizzbase@1.1.0` package is published on npm, and the matching `v1.1.0`
 GitHub release contains the engine binaries and SHA-256 manifest:
 
-- [rizzbase on npm](https://www.npmjs.com/package/rizzbase)
-- [v1.0.0 GitHub release](https://github.com/pazti/Rizz-Base/releases/tag/v1.0.0)
+- [rizzbase 1.1.0 on npm](https://www.npmjs.com/package/rizzbase/v/1.1.0)
+- [v1.1.0 GitHub release](https://github.com/pazti/Rizz-Base/releases/tag/v1.1.0)
 
-The source in this repository now targets SDK `1.1.0`, which is not yet
-published. The new query ordering and JSON backup APIs become available from
-`npm install rizzbase` after the matching `v1.1.0` npm package and engine
-release are published. Until then, build the SDK locally as shown below.
+The published SDK includes query ordering and JSON backup/restore. Install it
+with `npm install rizzbase`.
 
 ## 60-second quick start
 
@@ -89,18 +87,13 @@ console.log(latest);
 Run `node quick-start.mjs`. The example opens an existing Project if present;
 `create()` itself intentionally refuses to overwrite one.
 
-> **Version note:** The currently published `1.0.0` supports basic filters and
-> limits but does not yet include `orderBy` or JSON export/restore. Those APIs
-> are in the `1.1.0` source here and will be available after its npm package
-> and matching engine release are published.
-
 ## Examples
 
 The repository includes interactive [Notes](examples/notes.mjs) and
 [Todo list](examples/todos.mjs) apps. They demonstrate persistent data,
-filtered/ordered queries, and updates. See [how to run the examples](examples/README.md);
-the current source examples use a local SDK and engine build until `1.1.0` is
-published.
+filtered/ordered queries, and updates. See [how to run the examples](examples/README.md).
+The example scripts import the SDK from this repository, so build the local
+SDK and engine before running them.
 
 ## Build and test from source
 

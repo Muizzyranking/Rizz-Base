@@ -8,7 +8,9 @@ encrypted Project files:
 
 ## Run from this repository
 
-The `1.1.0` SDK source is not published yet. Build the local SDK and engine:
+The published `rizzbase@1.1.0` includes these features. The example scripts
+import the SDK from this repository, so build the local SDK and engine to run
+them against the checked-out source:
 
 ```sh
 cd sdk
