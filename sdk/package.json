@@ -21,7 +21,7 @@
     "url": "git+https://github.com/pazti/Rizz-Base.git",
     "directory": "sdk"
   },
-  "homepage": "https://github.com/pazti/Rizz-Base/blob/main/docs/SDK.md",
+  "homepage": "https://github.com/pazti/Rizz-Base/blob/main/docs/node-sdk.md",
   "bugs": { "url": "https://github.com/pazti/Rizz-Base/issues" },
   "keywords": ["database", "local-first", "encrypted", "rizzbase"],
   "scripts": {

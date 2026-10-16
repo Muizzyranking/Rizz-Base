@@ -31,7 +31,7 @@ engine for the current OS and CPU. A new Project is created with
 
 For the full API reference, query semantics, decrypted-backup safety, security
 guidance and V1 limits, see the
-[SDK guide](https://github.com/pazti/Rizz-Base/blob/main/docs/SDK.md). JSON
+[SDK guide](https://github.com/pazti/Rizz-Base/blob/main/docs/node-sdk.md). JSON
 backups contain plaintext Project data: store them securely and never commit
 them. Get private passphrases from your own secure input flow; never commit or
 log them. This is a local file library, not a cloud or realtime database.

@@ -136,7 +136,7 @@ console.log(project.name, recent.length);
 
 `create()` is for first-time project setup and refuses to overwrite an existing
 file. Keep the project path and passphrase private. Read the
-[beginner-friendly guide and API reference](docs/SDK.md).
+[beginner-friendly guide and API reference](docs/node-sdk.md).
 
 ## Project vocabulary
 
@@ -163,7 +163,7 @@ const active = await db.query("YOUR-LOBBY-ID")
 Supported operators: `==`, `!=`, `>`, `>=`, `<`, `<=`. Equality compares JSON
 values (including objects and arrays); filter comparisons support numbers and
 strings. `orderBy` sorts by a numeric or string field before `limit`; see
-[query details](docs/SDK.md#queries).
+[query details](docs/node-sdk.md#queries).
 
 ## JSON backup and restore
 
@@ -177,7 +177,7 @@ await restored.importBackup("./backup.json");
 JSON backups contain decrypted project data. Store them securely, do not commit
 them, and remove them when no longer needed. Export and import refuse to
 overwrite files; restore creates an encrypted Project using the supplied
-passphrase. See [backup safety and limits](docs/SDK.md#json-export-and-restore).
+passphrase. See the [SDK backup API and safety details](docs/node-sdk.md#project).
 
 ## Security and limits
 
@@ -218,6 +218,6 @@ and exercise it using temporary encrypted projects. Binary releases build six
 OS/architecture variants when a matching version tag is pushed; the current
 source version expects `v1.1.0`.
 
-See [SDK guide](docs/SDK.md), [file format and Go API](docs/FORMAT.md),
+See [SDK guide](docs/node-sdk.md), [file format and Go API](doc/FORMAT-legacy.md),
 [contributing](CONTRIBUTING.md) and [security](SECURITY.md). Rizzbase is
 licensed under the [MIT License](LICENSE).
