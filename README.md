@@ -6,8 +6,8 @@ network database, account or realtime connection.
 
 V1 includes the Go engine and CLI, a TypeScript/Node.js SDK, Lobby and Yap
 operations, and simple in-memory Yap queries. The React product UI is a
-Coming Soon preview; its screens use mock data and are not wired to the local
-database engine.
+Coming Soon preview; its sample screens are not wired to the local database
+engine and do not represent live user, usage, pricing, or performance figures.
 
 ## Install
 
@@ -20,9 +20,13 @@ engine binary for macOS, Linux or Windows on x64 or arm64. Later calls use the
 verified local cache. Downloads come from versioned GitHub releases and are
 checked against the release's SHA-256 manifest.
 
-The npm package and a matching `v1.0.0` GitHub release must both be published
-before `npm install rizzbase` is available to the public. Until then, use the
-SDK from this repository:
+The `rizzbase@1.0.0` package is published on npm, and the matching `v1.0.0`
+GitHub release contains the engine binaries and SHA-256 manifest:
+
+- [rizzbase on npm](https://www.npmjs.com/package/rizzbase)
+- [v1.0.0 GitHub release](https://github.com/pazti/Rizz-Base/releases/tag/v1.0.0)
+
+To build and test the SDK from this repository:
 
 ```sh
 cd sdk
@@ -30,6 +34,15 @@ npm install
 npm run build
 npm test
 ```
+
+## Deploy the UI to Vercel
+
+The React preview is a Vite static site. Import this repository into Vercel
+with the repository root as the project root; Vercel detects Vite
+automatically. Use `npm run build` as the build command and `dist` as the output
+directory if setting these manually. The app uses hash-based navigation, so it
+does not require server rewrites. The deployed UI remains a mock preview and
+does not connect to local `.rizz` files or provide hosted database features.
 
 ## Quick start
 

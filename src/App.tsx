@@ -3,6 +3,9 @@ import { useEffect, useState, type ReactNode } from "react";
 type Page = "home" | "dashboard" | "lobby" | "editor" | "auth" | "pricing";
 type Theme = "light" | "dark";
 
+const repositoryUrl = "https://github.com/pazti/Rizz-Base";
+const sdkGuideUrl = `${repositoryUrl}/blob/main/docs/SDK.md`;
+
 const Icon = ({ name }: { name: string }) => {
   const paths: Record<string, ReactNode> = {
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
@@ -51,11 +54,11 @@ function Header({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (
       <Logo onClick={() => go("home")} />
       <nav>
         <button onClick={() => go("home")}>FEATURES</button>
-        <button onClick={() => go("dashboard")}>DOCS</button>
+        <a href={sdkGuideUrl}>DOCS</a>
         <button onClick={() => go("pricing")}>PRICING</button>
       </nav>
       <div className="header-actions">
-        <button className="star-button" type="button"><Icon name="github" /> <b>12.4K</b></button>
+        <a className="star-button" href={repositoryUrl} target="_blank" rel="noreferrer"><Icon name="github" /> <b>GITHUB</b></a>
         <ThemeToggle theme={theme} toggle={toggle} />
       </div>
     </header>
@@ -76,12 +79,12 @@ function ComingSoonNotice({ message }: { message: string }) {
 }
 
 const lobbies = [
-  { name: "hot-girl-deploy", players: "8 / 10", time: "just now", status: "LIVE", tone: "pink" },
-  { name: "no-bugs-allowed", players: "4 / 8", time: "2 sec ago", status: "LIVE", tone: "yellow" },
-  { name: "ship-it-bestie", players: "2 / 6", time: "1 min ago", status: "IDLE", tone: "cream" },
-  { name: "main-character-api", players: "12 / 12", time: "4 min ago", status: "FULL", tone: "pink" },
-  { name: "delulu-is-solulu", players: "3 / 10", time: "8 min ago", status: "LIVE", tone: "yellow" },
-  { name: "touch-grass-prod", players: "0 / 4", time: "1 hr ago", status: "SLEEPY", tone: "cream" },
+  { name: "hot-girl-deploy" },
+  { name: "no-bugs-allowed" },
+  { name: "ship-it-bestie" },
+  { name: "main-character-api" },
+  { name: "delulu-is-solulu" },
+  { name: "touch-grass-prod" },
 ];
 
 function MiniDashboard({ go }: { go: (p: Page) => void }) {
@@ -94,13 +97,13 @@ function MiniDashboard({ go }: { go: (p: Page) => void }) {
         <span><Icon name="rules" /> Rules</span>
       </div>
       <div className="mini-main">
-        <div className="mini-head"><div><small>DATABASE / PROD</small><h3>lobbies</h3></div><Button tone="pink" onClick={() => go("dashboard")}><Icon name="plus" /> Add lobby</Button></div>
+        <div className="mini-head"><div><small>LOCAL PREVIEW</small><h3>lobbies</h3></div><Button tone="pink" onClick={() => go("dashboard")}><Icon name="plus" /> Add lobby</Button></div>
         <div className="mini-tabs"><b>Table</b><span>JSON</span><span>Vibes</span></div>
         <div className="mini-table">
-          <div><b>STATUS</b><b>LOBBY</b><b>PLAYERS</b><b>LAST YAP</b></div>
-          {lobbies.slice(0, 3).map((lobby) => <div key={lobby.name}><span><i /> live</span><strong>{lobby.name}</strong><span>{lobby.players}</span><span>{lobby.time}</span></div>)}
+          <div><b>TYPE</b><b>LOBBY</b><b>STORAGE</b></div>
+          {lobbies.slice(0, 3).map((lobby) => <div key={lobby.name}><span>Sample</span><strong>{lobby.name}</strong><span>Local file</span></div>)}
         </div>
-        <div className="code-strip"><span>rizzbase</span>.collection(<b>"lobbies"</b>).onYap(lockIn);</div>
+        <div className="code-strip"><span>await db</span>.createYap(lobby.id, <b>"welcome"</b>, data);</div>
       </div>
     </div>
   );
@@ -119,10 +122,9 @@ function Landing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
             <h1>RIZZ <span>BASE</span></h1>
             <p>The database that<br />actually has <mark>aura.</mark></p>
             <div className="button-row">
-              <Button onClick={() => go("auth")}>GET RIZZ <Icon name="arrow" /></Button>
-              <Button tone="plain"><Icon name="github" /> STAR ON GITHUB</Button>
+              <a className="btn" href="https://www.npmjs.com/package/rizzbase" target="_blank" rel="noreferrer">INSTALL SDK <Icon name="arrow" /></a>
+              <a className="btn plain" href={repositoryUrl} target="_blank" rel="noreferrer"><Icon name="github" /> VIEW ON GITHUB</a>
             </div>
-            <div className="proof"><div><i>J</i><i>M</i><i>K</i><i>+9K</i></div><span><b>9,001 devs</b><br />already locked in</span></div>
           </div>
           <div className="hero-product">
             <div className="burst">✦</div>
@@ -138,44 +140,44 @@ function Landing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
           <div className="section-title"><span>[ THE SAUCE ]</span><h2>ALL GAS.<br />NO BOILERPLATE.</h2></div>
           <div className="feature-grid">
             {[
-              ["realtime", "01", "LOCAL FIRST", "One encrypted .rizz Project file lives on your device. No hosted database or network service.", "yellow"],
-              ["data", "02", "YAPS THAT FIT", "Store regular JSON documents in a Lobby, then filter them with simple local queries.", "pink"],
-              ["rules", "03", "ENCRYPTED BY DEFAULT", "AES-256-GCM protects your local Project. Keep your passphrase private and keep a backup.", "cream"],
-            ].map(([icon, num, title, copy, tone]) => (
+              ["data", "LOCAL FIRST", "One encrypted .rizz Project file lives on your device. No hosted database or network service.", "yellow"],
+              ["data", "YAPS THAT FIT", "Store regular JSON documents in a Lobby, then filter them with simple local queries.", "pink"],
+              ["rules", "ENCRYPTED BY DEFAULT", "AES-256-GCM protects your local Project. Keep your passphrase private and keep a backup.", "cream"],
+            ].map(([icon, title, copy, tone]) => (
               <article className={`feature-card ${tone}`} key={title}>
-                <div><span><Icon name={icon} /></span><b>{num}</b></div>
+                <div><span><Icon name={icon} /></span></div>
                 <h3>{title}</h3><p>{copy}</p><button onClick={() => go("dashboard")}>SEE THE RECEIPTS <Icon name="arrow" /></button>
               </article>
             ))}
           </div>
         </section>
-        <BigBanner go={go} />
+        <BigBanner />
       </main>
       <Footer go={go} />
     </>
   );
 }
 
-function BigBanner({ go }: { go: (p: Page) => void }) {
-  return <section className="big-banner"><div><small>FREE TIER GOES CRAZY</small><h2>YOUR APP CALLED.<br /><span>IT WANTS MORE RIZZ.</span></h2></div><Button tone="pink" onClick={() => go("auth")}>START COOKING <Icon name="arrow" /></Button></section>;
+function BigBanner() {
+  return <section className="big-banner"><div><small>LOCAL-FIRST V1</small><h2>YOUR PROJECT.<br /><span>YOUR DEVICE.</span></h2></div><a className="btn pink" href="https://www.npmjs.com/package/rizzbase" target="_blank" rel="noreferrer">GET THE SDK <Icon name="arrow" /></a></section>;
 }
 
 function Footer({ go }: { go: (p: Page) => void }) {
-  return <footer><Logo onClick={() => go("home")} /><p>© 2025 Rizzbase. Made with zero chill.</p><div><button onClick={() => go("dashboard")}>Docs</button><button>GitHub</button><span>● STATUS: VIBING</span></div></footer>;
+  return <footer><Logo onClick={() => go("home")} /><p>© 2026 Rizzbase. Made with zero chill.</p><div><a href={sdkGuideUrl}>Docs</a><a href={repositoryUrl} target="_blank" rel="noreferrer">GitHub</a><span>LOCAL-FIRST V1</span></div></footer>;
 }
 
 function Sidebar({ active, go }: { active: string; go: (p: Page) => void }) {
   return (
     <aside className="app-sidebar">
       <Logo onClick={() => go("home")} />
-      <div className="workspace"><i>RB</i><span><b>Main character</b><small>PRO ERA</small></span><b>⌄</b></div>
+      <div className="workspace"><i>RB</i><span><b>Local Project</b><small>PRIVATE FILE</small></span><b>⌄</b></div>
       <nav>
         <small>WORKSPACE</small>
-        <button className={active === "data" ? "active" : ""} onClick={() => go("dashboard")}><Icon name="data" /> Data <kbd>6</kbd></button>
-        <button className={active === "realtime" ? "active" : ""}><Icon name="realtime" /> Realtime <i>●</i></button>
-        <button className={active === "rules" ? "active" : ""}><Icon name="rules" /> Rules</button>
+        <button className={active === "data" ? "active" : ""} onClick={() => go("dashboard")}><Icon name="data" /> Data</button>
+        <button><Icon name="data" /> Queries</button>
+        <button><Icon name="rules" /> Encryption</button>
       </nav>
-      <div className="side-bottom"><button>? <span>Need help, bestie?</span></button><div><i>MC</i><span><b>main@rizz.dev</b><small>Certified yapper</small></span></div></div>
+      <div className="side-bottom"><button>? <span>Need help, bestie?</span></button><div><i>RB</i><span><b>Rizzbase</b><small>Local preview</small></span></div></div>
     </aside>
   );
 }
@@ -185,7 +187,7 @@ function AppShell({ children, page, theme, toggle, go }: { children: ReactNode; 
     <div className="app-shell">
       <Sidebar active="data" go={go} />
       <div className="app-area">
-        <header className="app-topbar"><div><button onClick={() => go("dashboard")}>PROD</button><span>/</span><b>{page}</b></div><div><span className="sync">● ALL SYNCED</span><ThemeToggle theme={theme} toggle={toggle} /></div></header>
+        <header className="app-topbar"><div><button onClick={() => go("dashboard")}>PREVIEW</button><span>/</span><b>{page}</b></div><div><span className="sync">SAMPLE DATA</span><ThemeToggle theme={theme} toggle={toggle} /></div></header>
         <ComingSoonNotice message="This dashboard is a mockup using sample data; it is not connected to your .rizz files. Use the Go CLI or TypeScript SDK to work with real V1 data." />
         {children}
       </div>
@@ -198,15 +200,14 @@ function Dashboard({ theme, toggle, go }: { theme: Theme; toggle: () => void; go
     <AppShell page="lobbies" theme={theme} toggle={toggle} go={go}>
       <main className="product-page">
         <div className="product-heading"><div><span className="kicker">DATABASE / COLLECTIONS</span><h1>LOBBIES<span>.</span></h1><p>Your chaotic little corners of the internet.</p></div><Button tone="pink"><Icon name="plus" /> NEW LOBBY</Button></div>
-        <div className="collection-tools"><div className="search">⌕ <span>Search lobbies...</span><kbd>⌘ K</kbd></div><div><Button tone="plain">FILTERS <b>2</b></Button><Button tone="black">▦ GRID</Button></div></div>
+        <div className="collection-tools"><div className="search">⌕ <span>Search lobbies...</span></div><div><Button tone="plain">FILTERS</Button><Button tone="black">▦ GRID</Button></div></div>
         <div className="lobby-grid">
-          {lobbies.map((lobby, index) => (
-            <article className={`lobby-card ${index === 1 ? "hovered" : ""}`} key={lobby.name} onClick={() => go("lobby")}>
-              <div><span className={`status ${lobby.status.toLowerCase()}`}>● {lobby.status}</span><button>•••</button></div>
+          {lobbies.map((lobby) => (
+            <article className="lobby-card" key={lobby.name} onClick={() => go("lobby")}>
+              <div><span className="status">SAMPLE</span><button>•••</button></div>
               <h2>{lobby.name}</h2>
-              <p>Production lobby for shipping absolute cinema.</p>
-              <div className="card-meta"><span><Icon name="users" /><b>{lobby.players}</b> players</span><span><Icon name="clock" />{lobby.time}</span></div>
-              <div className="card-foot"><div><i>JR</i><i>MK</i><i>+3</i></div><Icon name="arrow" /></div>
+              <p>Example Lobby for the local-first preview.</p>
+                  <div className="card-foot"><span>Not connected to a Project</span><Icon name="arrow" /></div>
             </article>
           ))}
           <button className="add-lobby" type="button"><span><Icon name="plus" /></span><b>CREATE NEW LOBBY</b><small>Go make something unhinged.</small></button>
@@ -217,10 +218,10 @@ function Dashboard({ theme, toggle, go }: { theme: Theme; toggle: () => void; go
 }
 
 const yapRows = [
-  ["yap_001", "mika", "just shipped auth. we are so back", "98", "just now"],
-  ["yap_002", "jules", "prod is giving main character energy", "87", "12 sec ago"],
-  ["yap_003", "kai", "zero bugs (do not fact check this)", "76", "1 min ago"],
-  ["yap_004", "sasha", "the schema is lowkey eating", "92", "4 min ago"],
+  ["welcome", "mika", "just shipped auth. we are so back"],
+  ["release-note", "jules", "prod is giving main character energy"],
+  ["status", "kai", "zero bugs (do not fact check this)"],
+  ["schema", "sasha", "the schema is lowkey eating"],
 ];
 
 function Lobby({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p: Page) => void }) {
@@ -228,25 +229,20 @@ function Lobby({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p
     <AppShell page="hot-girl-deploy" theme={theme} toggle={toggle} go={go}>
       <main className="product-page">
         <button className="back-link" onClick={() => go("dashboard")}><Icon name="back" /> ALL LOBBIES</button>
-        <div className="product-heading compact"><div><div className="live-line"><span>● LIVE</span><b>8 YAPPERS ONLINE</b></div><h1>HOT-GIRL-DEPLOY<span>.</span></h1><p>Where commits get cute and code gets shipped.</p></div><Button tone="pink" onClick={() => go("editor")}><Icon name="plus" /> ADD YAP</Button></div>
-        <div className="content-tabs"><button className="active">TABLE <b>124</b></button><button>JSON</button><button>VIBES <span>NEW</span></button></div>
+        <div className="product-heading compact"><div><div className="live-line"><span>SAMPLE</span></div><h1>HOT-GIRL-DEPLOY<span>.</span></h1><p>Example data for the interface preview.</p></div><Button tone="pink" onClick={() => go("editor")}><Icon name="plus" /> ADD YAP</Button></div>
+          <div className="content-tabs"><button className="active">TABLE</button><button>JSON</button><button>VIBES</button></div>
         <div className="lobby-layout">
           <div className="data-panel">
             <div className="table-tools"><div>⌕ <span>Find a yap...</span></div><Button tone="plain">↕ SORT</Button></div>
             <div className="brutal-table">
-              <div className="tr th"><span>ID</span><span>AUTHOR</span><span>CONTENT</span><span>RIZZ</span><span>UPDATED</span></div>
-              {yapRows.map((row) => <button className="tr" key={row[0]} onClick={() => go("editor")}><code>{row[0]}</code><span><i>{row[1][0].toUpperCase()}</i>{row[1]}</span><b>{row[2]}</b><strong>{row[3]}</strong><small>{row[4]}</small></button>)}
+              <div className="tr th"><span>ID</span><span>AUTHOR</span><span>CONTENT</span></div>
+              {yapRows.map((row) => <button className="tr" key={row[0]} onClick={() => go("editor")}><code>{row[0]}</code><span><i>{row[1][0].toUpperCase()}</i>{row[1]}</span><b>{row[2]}</b></button>)}
             </div>
-            <div className="pagination"><span>Showing 1–4 of 124 yaps</span><div><button>←</button><button>1</button><button>2</button><button>3</button><button>→</button></div></div>
           </div>
-          <aside className="json-float"><div><span>LIVE JSON</span><i>● SYNCING</i></div><pre>{`{
+          <aside className="json-float"><div><span>SAMPLE JSON</span></div><pre>{`{
   "lobby": "hot-girl-deploy",
-  "status": `}<b>"serving"</b>{`,
-  "players": 8,
-  "latest_yap": {
-    "author": `}<em>"mika"</em>{`,
-    "rizz_score": `}<strong>98</strong>{`
-  }
+  "author": `}<em>"mika"</em>{`,
+  "content": `}<b>"just shipped auth"</b>{`
 }`}</pre><button>COPY RAW JSON</button></aside>
         </div>
       </main>
@@ -260,40 +256,33 @@ function Field({ label, children, wide }: { label: string; children: ReactNode; 
 
 function Editor({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p: Page) => void }) {
   return (
-    <AppShell page="yap_001" theme={theme} toggle={toggle} go={go}>
+    <AppShell page="welcome" theme={theme} toggle={toggle} go={go}>
       <main className="product-page editor">
-        <div className="editor-head"><div><button className="back-link" onClick={() => go("lobby")}><Icon name="back" /> HOT-GIRL-DEPLOY</button><h1>EDIT YAP<span>.</span></h1><p>yap_001 · Last saved just now</p></div><div><Button tone="plain"><Icon name="trash" /> DELETE</Button><Button><Icon name="check" /> SAVE CHANGES</Button></div></div>
+        <div className="editor-head"><div><button className="back-link" onClick={() => go("lobby")}><Icon name="back" /> HOT-GIRL-DEPLOY</button><h1>EDIT YAP<span>.</span></h1><p>welcome · Example record</p></div><div><Button tone="plain"><Icon name="trash" /> DELETE</Button><Button><Icon name="check" /> SAVE CHANGES</Button></div></div>
         <div className="editor-grid">
           <section className="form-card">
             <div className="card-title"><span>YAP DETAILS</span><b>REQUIRED-ish</b></div>
             <div className="form-grid">
-              <Field label="AURA"><select defaultValue="immaculate"><option value="immaculate">Immaculate ✦</option></select></Field>
-              <Field label="RIZZ SCORE"><div className="score-input"><input defaultValue="98" /><span>/ 100</span></div></Field>
-              <Field label="CONTENT" wide><textarea defaultValue="just shipped auth. we are so back" /><small>38 / 280 characters · keep yapping</small></Field>
+              <Field label="CONTENT" wide><textarea defaultValue="just shipped auth. we are so back" /></Field>
               <Field label="TAGS" wide><div className="tag-input"><b>shipping ×</b><b>auth ×</b><span>Add a tag...</span></div></Field>
               <Field label="AUTHOR"><input defaultValue="mika" /></Field>
               <Field label="VISIBILITY"><select defaultValue="lobby"><option value="lobby">Whole lobby</option></select></Field>
             </div>
           </section>
           <aside className="json-editor">
-            <div className="card-title"><span>LIVE PREVIEW</span><b>● VALID JSON</b></div>
-            <pre><i>01</i>  {`{`}
-{`\n`}<i>02</i>    <em>"id"</em>: <b>"yap_001"</b>,
-{`\n`}<i>03</i>    <em>"author"</em>: <b>"mika"</b>,
-{`\n`}<i>04</i>    <em>"content"</em>: <b>"just shipped auth.</b>
-{`\n`}<i>05</i>      <b>we are so back"</b>,
-{`\n`}<i>06</i>    <em>"aura"</em>: <b>"immaculate"</b>,
-{`\n`}<i>07</i>    <em>"rizz_score"</em>: <strong>98</strong>,
-{`\n`}<i>08</i>    <em>"tags"</em>: [<b>"shipping"</b>, <b>"auth"</b>]
-{`\n`}<i>09</i>  {`}`}</pre>
-            <div><span>Schema valid. You ate.</span><button>COPY</button></div>
+            <div className="card-title"><span>EXAMPLE JSON</span><b>SAMPLE DATA</b></div>
+            <pre>{`{
+  "id": `}<b>"welcome"</b>{`,
+  "author": `}<b>"mika"</b>{`,
+  "content": `}<b>"just shipped auth. we are so back"</b>{`,
+  "tags": [`}<b>"shipping"</b>{`, `}<b>"auth"</b>{`]
+}`}</pre>
+            <div><span>Example only. Not connected.</span><button>COPY</button></div>
           </aside>
         </div>
         <section className="history">
-          <div className="card-title"><span>VIBE HISTORY</span><b>4 EVENTS</b></div>
-          <div className="timeline">
-            {["Yap created by mika", "Rizz score changed 82 → 98", "Tag “auth” added", "Content updated"].map((item, i) => <div key={item}><i className={i === 0 ? "hot" : ""}>{i === 0 ? "✦" : "✓"}</i><span><b>{item}</b><small>{i === 0 ? "just now" : `${i * 3 + 1} min ago`}</small></span></div>)}
-          </div>
+          <div className="card-title"><span>EXAMPLE HISTORY</span></div>
+          <div className="timeline"><div><i className="hot">✦</i><span><b>Example Yap created</b></span></div><div><i>✓</i><span><b>Example content updated</b></span></div></div>
         </section>
       </main>
     </AppShell>
@@ -318,21 +307,13 @@ function Auth({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p:
 }
 
 function Pricing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p: Page) => void }) {
-  const plans = [
-    { name: "FREE", price: "$0", desc: "For side quests and tiny yaps.", features: ["3 active lobbies", "10K yaps / month", "Realtime vibes", "Community support"], tone: "plain" as const },
-    { name: "PRO", price: "$19", desc: "For devs who stay shipping.", features: ["Unlimited lobbies", "1M yaps / month", "Advanced rules", "Priority yap support", "Custom domains"], tone: "yellow" as const, badge: "MOST RIZZ" },
-    { name: "SIGMA", price: "$69", desc: "For teams doing numbers.", features: ["Everything in Pro", "Unlimited yaps", "Team permissions", "SLA that goes hard", "A human, instantly"], tone: "pink" as const },
-  ];
   return (
     <>
       <Header theme={theme} toggle={toggle} go={go} />
-      <ComingSoonNotice message="This pricing page is a preview. Rizzbase V1 is a local library and has no hosted plans, accounts, or realtime service." />
+      <ComingSoonNotice message="Rizzbase V1 is a local library, not a hosted service. There are no subscriptions, accounts, or hosted plans." />
       <main className="pricing-page">
-        <div className="pricing-head"><span>PRICING WITHOUT THE JUMPSCARE</span><h1>PICK YOUR<br /><mark>AURA LEVEL.</mark></h1><p>No weird fees. No “contact sales.” Just vibes and databases.</p><div className="billing"><button className="active">MONTHLY</button><button>YEARLY <b>-20%</b></button></div></div>
-        <div className="pricing-grid">
-          {plans.map((plan) => <article className={`price-card ${plan.tone}`} key={plan.name}>{plan.badge && <div className="plan-badge">✦ {plan.badge} ✦</div>}<span className="plan-name">{plan.name}</span><div className="price"><b>{plan.price}</b><span>/ month<br />no cap</span></div><p>{plan.desc}</p><Button tone={plan.tone === "plain" ? "plain" : plan.tone} onClick={() => go("auth")}>{plan.name === "FREE" ? "START YAPPING" : plan.name === "PRO" ? "GET PRO RIZZ" : "GO FULL SIGMA"} <Icon name="arrow" /></Button><ul>{plan.features.map((feature) => <li key={feature}><i>✓</i>{feature}</li>)}</ul></article>)}
-        </div>
-        <BigBanner go={go} />
+        <div className="pricing-head"><span>LOCAL-FIRST V1</span><h1>NO HOSTED<br /><mark>PLANS OR FEES.</mark></h1><p>Use the published Node.js SDK to work with encrypted Project files on your device.</p><a className="btn pink" href="https://www.npmjs.com/package/rizzbase" target="_blank" rel="noreferrer">GET THE SDK <Icon name="arrow" /></a></div>
+        <BigBanner />
       </main>
       <Footer go={go} />
     </>
