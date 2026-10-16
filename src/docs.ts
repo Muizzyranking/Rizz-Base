@@ -37,7 +37,7 @@ export const docs: DocEntry[] = [
     title: "CLI + engine reference",
     kicker: "SOURCE OF TRUTH",
     blurb: "Every operation, request shape, errors.",
-    badge: "11 OPS",
+    badge: "12 OPS",
     markdown: cli,
   },
   {

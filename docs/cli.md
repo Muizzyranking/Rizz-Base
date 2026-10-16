@@ -32,10 +32,11 @@ rizzbase < request.json
 | `path` | all | Must end in `.rizz` (SDK rule; engine accepts any path) |
 | `passphrase` | all | Nonempty, private stdin only |
 | `name` | `create`, `lobby.create` | Project or Lobby display name |
+| `backupPath` | `project.import` | Validated `.json` backup; must differ from `path` |
 | `lobbyId` | `lobby.delete`, all `yap.*` | Generated Lobby ID |
 | `yapId` | `yap.create/get/update/delete` | 1–128 bytes, caller-chosen |
 | `data` | `yap.create`, `yap.update` | Valid JSON value |
-| `query` | `yap.query` | `{ "where": [...], "limit": n }` |
+| `query` | `yap.query` | `{ "where": [...], "orderBy": {...}, "limit": n }` |
 
 Unknown fields are rejected.
 
@@ -45,6 +46,7 @@ Unknown fields are rejected.
 | --- | --- | --- |
 | `create` | `name` | `{ ok:true, project }` — never overwrites an existing file |
 | `open` | — | `{ ok:true, project }` — decrypt + metadata |
+| `project.import` | `backupPath` | `{ ok:true, project }` — validate a `.json` backup and encrypt it into a new file; never overwrites |
 | `lobby.create` | `name` | `{ ok:true, lobby }` with generated `id` |
 | `lobby.list` | — | `{ ok:true, lobbies }` sorted by ID |
 | `lobby.delete` | `lobbyId` | `{ ok:true }` — deletes contained Yaps too |
@@ -53,7 +55,7 @@ Unknown fields are rejected.
 | `yap.list` | `lobbyId` | `{ ok:true, yaps }` sorted by Yap ID |
 | `yap.update` | `lobbyId`, `yapId`, `data` | `{ ok:true, yap }` — full replace |
 | `yap.delete` | `lobbyId`, `yapId` | `{ ok:true }` |
-| `yap.query` | `lobbyId`, `query` | `{ ok:true, yaps }` filtered + limited |
+| `yap.query` | `lobbyId`, `query` | `{ ok:true, yaps }` filtered, ordered, then limited |
 
 Failure shape:
 
@@ -61,7 +63,7 @@ Failure shape:
 { "ok": false, "error": "human message", "errorCode": "YAP_NOT_FOUND" }
 ```
 
-Error codes: `AUTHENTICATION_FAILED`, `INVALID_FORMAT`, `PROJECT_BUSY`, `LOBBY_NOT_FOUND`, `YAP_NOT_FOUND`, `YAP_EXISTS`, `FILE_NOT_FOUND`, `FILE_EXISTS`, `PERMISSION_DENIED`, `ENGINE_ERROR`.
+Error codes: `AUTHENTICATION_FAILED`, `INVALID_FORMAT`, `PROJECT_BUSY`, `LOBBY_NOT_FOUND`, `YAP_NOT_FOUND`, `YAP_EXISTS`, `FILE_NOT_FOUND`, `FILE_EXISTS`, `PERMISSION_DENIED`, `INVALID_BACKUP`, `ENGINE_ERROR`.
 
 ## Examples
 
@@ -74,7 +76,7 @@ echo '{"operation":"lobby.create","path":"./demo.rizz","passphrase":"s3cret","na
 
 Use `jq` to avoid leaking secrets into shell history files where possible, and prefer reading the passphrase from a prompt or file descriptor in scripts.
 
-Query with two filters + limit:
+Query with two filters, an ordering, and a limit:
 
 ```json
 {
@@ -87,12 +89,24 @@ Query with two filters + limit:
       { "field": "user.active", "operator": "==", "value": true },
       { "field": "score", "operator": ">=", "value": 10 }
     ],
+    "orderBy": { "field": "score", "direction": "desc" },
     "limit": 20
   }
 }
 ```
 
-Operators: `==`, `!=`, `>`, `>=`, `<`, `<=`. Filters are AND-combined. `field` uses dot-separated paths (`user.active`). Equality compares full JSON values (objects and arrays included). Ordering only compares number-vs-number or string-vs-string. Missing fields never match, including `!=`. Results sort by Yap ID, then the limit applies. The Lobby is scanned in memory; no indexes.
+Operators: `==`, `!=`, `>`, `>=`, `<`, `<=`. Filters are AND-combined. `field` uses dot-separated paths (`user.active`). Equality compares full JSON values (objects and arrays included). Ordering only compares number-vs-number or string-vs-string. Missing fields never match, including `!=`. `orderBy` direction is `"asc"` (default) or `"desc"`; numbers sort before strings, missing or non-number/string values sort last in either direction, and ties fall back to Yap ID. Filtering, ordering, then limiting happen in that order. The Lobby is scanned in memory; no indexes.
+
+## Backup and restore
+
+There is no `export` operation: exporting is decrypt + write JSON, which SDKs
+do client-side (`db.export()` writes pretty-printed JSON with owner-only
+permissions, capped at 64 MiB, and refuses to overwrite). Restoring is
+`project.import`, which validates the complete decrypted Project structure
+(wrong shape is `INVALID_BACKUP`) before creating the encrypted destination.
+Both sides refuse to overwrite existing files, and the backup path must end
+in `.json` while the destination ends in `.rizz`. Treat backups as sensitive
+plaintext.
 
 ## Limits to design around
 

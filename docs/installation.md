@@ -2,11 +2,12 @@
 
 You do **not** need npm to run Rizzbase. Download the Go engine yourself, put it on your `PATH`, and every SDK talks to it. This is the Part 2 direction: the SDK stops downloading binaries, you own the binary.
 
-Binaries live on versioned GitHub releases with a `SHA256SUMS` manifest:
+Binaries live on versioned GitHub releases with a `SHA256SUMS` manifest
+(current release: `v1.1.0`):
 
 ```text
-https://github.com/pazti/Rizz-Base/releases/download/v1.0.0/<asset>
-https://github.com/pazti/Rizz-Base/releases/download/v1.0.0/SHA256SUMS
+https://github.com/pazti/Rizz-Base/releases/download/v1.1.0/<asset>
+https://github.com/pazti/Rizz-Base/releases/download/v1.1.0/SHA256SUMS
 ```
 
 ## Pick your asset
@@ -20,12 +21,12 @@ https://github.com/pazti/Rizz-Base/releases/download/v1.0.0/SHA256SUMS
 | Windows | x64 | `rizzbase-windows-amd64.exe` |
 | Windows | arm64 | `rizzbase-windows-arm64.exe` |
 
-The SDK you use must match the release tag (today: `v1.0.0`).
+The SDK you use must match the release tag (today: `v1.1.0`).
 
 ## Linux
 
 ```sh
-VERSION=1.0.0
+VERSION=1.1.0
 ASSET=rizzbase-linux-amd64   # or rizzbase-linux-arm64
 BASE=https://github.com/pazti/Rizz-Base/releases/download/v$VERSION
 
@@ -52,7 +53,7 @@ echo '{"operation":"open","path":"x.rizz","passphrase":"y"}' | rizzbase || true
 ## macOS
 
 ```sh
-VERSION=1.0.0
+VERSION=1.1.0
 ASSET=rizzbase-darwin-arm64   # Apple Silicon; Intel uses rizzbase-darwin-amd64
 BASE=https://github.com/pazti/Rizz-Base/releases/download/v$VERSION
 
@@ -76,7 +77,7 @@ If macOS blocks the binary, open **System Settings → Privacy & Security** and 
 ## Windows (PowerShell)
 
 ```powershell
-$Version = "1.0.0"
+$Version = "1.1.0"
 $Asset = "rizzbase-windows-amd64.exe"  # or rizzbase-windows-arm64.exe
 $Base = "https://github.com/pazti/Rizz-Base/releases/download/v$Version"
 $Dir = "$HOME\.rizzbase\bin"

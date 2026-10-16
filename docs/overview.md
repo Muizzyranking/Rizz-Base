@@ -50,6 +50,6 @@ Go engine (one process per operation)
 
 ## What V1 does not do
 
-No server, realtime, or multi-user access. No accounts, hosted backups, schema enforcement, indexes, joins, or sorting options. Queries decrypt and scan one Lobby in memory. The UI preview is not connected to the engine.
+No server, realtime, or multi-user access. No accounts, hosted backups, schema enforcement, indexes, or joins. Backups are manual JSON exports you protect yourself. Queries decrypt and scan one Lobby in memory. The UI preview is not connected to the engine.
 
 > Next: install the engine binary manually, or skip ahead to the Node.js SDK quickstart.

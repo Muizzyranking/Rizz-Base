@@ -27,7 +27,8 @@ db = Rizzbase("./my-project.rizz", get_passphrase_privately())
 lobby = db.create_lobby("general")
 db.create_yap(lobby["id"], "welcome", {"message": "hello"})
 welcome = db.get_yap(lobby["id"], "welcome")
-yaps = db.query(lobby["id"]).where("message", "==", "hello").limit(10).exec()
+yaps = db.query(lobby["id"]).where("message", "==", "hello").order_by("score", "desc").limit(10).exec()
+db.export("./backup.json")
 ```
 
 Planned rules, same as Node:

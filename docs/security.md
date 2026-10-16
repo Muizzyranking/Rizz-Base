@@ -16,9 +16,10 @@ Rizzbase protects a file on your device. It does not protect you from yourself â
 - Wrong passphrases and damaged ciphertext both fail authentication â€” by design you cannot tell them apart.
 - Brainrot word-pair encoding is only a reversible representation. It adds zero secrecy.
 
-## Files and locks
+## Files, locks, and backups
 
 - One Project is one `.rizz` file, max 64 MiB encoded. Keep secure backups yourself.
+- `export()` writes a decrypted JSON snapshot (whole Project, plain text, 64 MiB cap, owner-only permissions). Treat it as sensitive: store it securely, never commit it, delete it when done. Import validates the full structure first (`INVALID_BACKUP` on bad files); neither side overwrites existing files.
 - Owner-only permissions on Unix. Never check `.rizz` files or passphrases into git.
 - Writes serialize on an adjacent `.lock` directory. A present lock returns `PROJECT_BUSY` instead of overwriting.
 - After a crash, confirm no writer process is alive before manually removing a stale `.lock` directory.

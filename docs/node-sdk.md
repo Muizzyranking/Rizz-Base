@@ -2,7 +2,7 @@
 
 The only production SDK today. It wraps the engine binary: each method ensures a binary, spawns one engine process with your request on stdin, and resolves with the decoded result.
 
-Requires **Node.js 20+** and a supported platform (Linux, macOS, Windows on x64/arm64). Unsupported platforms must supply `binaryPath`.
+Requires **Node.js 20+** and a supported platform (Linux, macOS, Windows on x64/arm64). Unsupported platforms must supply `binaryPath`. This guide targets SDK `1.1.0` (`orderBy`, JSON export and restore included).
 
 ## Install
 
@@ -73,6 +73,19 @@ try {
 
 - `create(name): Promise<Project>` — new encrypted project; `FILE_EXISTS` if present.
 - `open(): Promise<Project>` — decrypt + metadata.
+- `export(backupPath): Promise<void>` — write a decrypted JSON snapshot; never overwrites, owner-only permissions, 64 MiB cap. The backup is sensitive plaintext.
+- `importBackup(backupPath): Promise<Project>` — validate a JSON backup and encrypt it into this instance's new `.rizz` path. Bad backups reject with `INVALID_BACKUP`.
+
+Backup paths must end in `.json` and differ from the project path:
+
+```ts
+await db.export("./backup.json");
+
+const restored = new Rizzbase("./restored.rizz", getPassphrasePrivately());
+await restored.importBackup("./backup.json");
+```
+
+For complete runnable apps, see the `examples/` folder in the repository (Notes and Todo).
 
 ### Lobby
 
@@ -100,30 +113,32 @@ await db.queryYaps("LOBBY-ID", {
     { field: "user.active", operator: "==", value: true },
     { field: "score", operator: ">=", value: 10 },
   ],
+  orderBy: { field: "score", direction: "desc" },
   limit: 20,
 });
 ```
 
-Builder form (immutable — each `where`/`limit` returns a new query):
+Builder form (immutable — each `where`/`orderBy`/`limit` returns a new query):
 
 ```ts
 await db.query("LOBBY-ID")
   .where("user.active", "==", true)
   .where("score", ">=", 10)
+  .orderBy("score", "desc")
   .limit(20)
   .exec();
 ```
 
-Same semantics as the CLI: AND-combined, dot paths, six operators, missing field never matches, Yap-ID sort before limit.
+`orderBy(field, direction)` takes `"asc"` (default) or `"desc"`. Numbers sort before strings; missing or non-number/string values sort last in either direction; ties fall back to Yap ID. Same semantics as the CLI: AND-combined, dot paths, six operators, missing field never matches, filter → order → limit.
 
 ### Error codes
 
-`INVALID_ARGUMENT`, `UNSUPPORTED_PLATFORM`, `BINARY_DOWNLOAD_FAILED`, `BINARY_CHECKSUM_FAILED`, `BINARY_UNAVAILABLE`, `ENGINE_TIMEOUT`, `ENGINE_PROTOCOL_ERROR`, `ENGINE_ERROR`, plus engine codes `AUTHENTICATION_FAILED`, `INVALID_FORMAT`, `PROJECT_BUSY`, `LOBBY_NOT_FOUND`, `YAP_NOT_FOUND`, `YAP_EXISTS`, `FILE_NOT_FOUND`, `FILE_EXISTS`, `PERMISSION_DENIED`.
+`INVALID_ARGUMENT`, `UNSUPPORTED_PLATFORM`, `BINARY_DOWNLOAD_FAILED`, `BINARY_CHECKSUM_FAILED`, `BINARY_UNAVAILABLE`, `ENGINE_TIMEOUT`, `ENGINE_PROTOCOL_ERROR`, `ENGINE_ERROR`, plus engine codes `AUTHENTICATION_FAILED`, `INVALID_FORMAT`, `PROJECT_BUSY`, `LOBBY_NOT_FOUND`, `YAP_NOT_FOUND`, `YAP_EXISTS`, `FILE_NOT_FOUND`, `FILE_EXISTS`, `PERMISSION_DENIED`, `INVALID_BACKUP`, and SDK-side `EXPORT_FAILED`.
 
 ## Typing
 
 ```ts
-import type { Project, Lobby, Yap, Filter, QueryOptions, JsonValue } from "rizzbase";
+import type { Project, Lobby, Yap, Filter, OrderBy, OrderDirection, QueryOptions, JsonValue } from "rizzbase";
 ```
 
 `JsonValue` is the standard JSON union. Generics like `getYap<{ message: string }>` only affect TypeScript — the engine stores raw JSON.
