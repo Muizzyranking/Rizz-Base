@@ -66,6 +66,15 @@ function Ticker() {
   return <div className="ticker"><div>NOW SERVING AURA <b>✦</b> RIZZBASE IS SO BACK <b>✦</b> NO CAP DATABASE <b>✦</b> NOW SERVING AURA <b>✦</b> RIZZBASE IS SO BACK <b>✦</b></div></div>;
 }
 
+function ComingSoonNotice({ message }: { message: string }) {
+  return (
+    <aside className="coming-soon-notice" role="status">
+      <span>COMING SOON</span>
+      <p>{message}</p>
+    </aside>
+  );
+}
+
 const lobbies = [
   { name: "hot-girl-deploy", players: "8 / 10", time: "just now", status: "LIVE", tone: "pink" },
   { name: "no-bugs-allowed", players: "4 / 8", time: "2 sec ago", status: "LIVE", tone: "yellow" },
@@ -101,6 +110,7 @@ function Landing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
   return (
     <>
       <Ticker />
+      <ComingSoonNotice message="The dashboard screens below are a mockup and are not connected to your local files. Use the Go engine or TypeScript SDK for real V1 data." />
       <Header theme={theme} toggle={toggle} go={go} />
       <main className="landing">
         <section className="hero">
@@ -116,9 +126,9 @@ function Landing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
           </div>
           <div className="hero-product">
             <div className="burst">✦</div>
-            <div className="live-sticker">● LIVE RN</div>
+            <div className="live-sticker">● UI PREVIEW</div>
             <MiniDashboard go={go} />
-            <div className="install">npm i rizzbase <b>COPY</b></div>
+    <div className="install">LOCAL V1 <b>GO + TS SDK</b></div>
           </div>
         </section>
 
@@ -128,9 +138,9 @@ function Landing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
           <div className="section-title"><span>[ THE SAUCE ]</span><h2>ALL GAS.<br />NO BOILERPLATE.</h2></div>
           <div className="feature-grid">
             {[
-              ["realtime", "01", "STUPID FAST", "Reads so quick your data is already there before you even asked. Literally no thoughts, just speed.", "yellow"],
-              ["data", "02", "REALTIME YAPS", "Every update hits different. Subscribe once and watch your app lock in with zero refresh drama.", "pink"],
-              ["rules", "03", "LOWKEY SECURE", "Rules that actually make sense. Your data stays yours. No sus behavior in the server room.", "cream"],
+              ["realtime", "01", "LOCAL FIRST", "One encrypted .rizz Project file lives on your device. No hosted database or network service.", "yellow"],
+              ["data", "02", "YAPS THAT FIT", "Store regular JSON documents in a Lobby, then filter them with simple local queries.", "pink"],
+              ["rules", "03", "ENCRYPTED BY DEFAULT", "AES-256-GCM protects your local Project. Keep your passphrase private and keep a backup.", "cream"],
             ].map(([icon, num, title, copy, tone]) => (
               <article className={`feature-card ${tone}`} key={title}>
                 <div><span><Icon name={icon} /></span><b>{num}</b></div>
@@ -176,6 +186,7 @@ function AppShell({ children, page, theme, toggle, go }: { children: ReactNode; 
       <Sidebar active="data" go={go} />
       <div className="app-area">
         <header className="app-topbar"><div><button onClick={() => go("dashboard")}>PROD</button><span>/</span><b>{page}</b></div><div><span className="sync">● ALL SYNCED</span><ThemeToggle theme={theme} toggle={toggle} /></div></header>
+        <ComingSoonNotice message="This dashboard is a mockup using sample data; it is not connected to your .rizz files. Use the Go CLI or TypeScript SDK to work with real V1 data." />
         {children}
       </div>
     </div>
@@ -290,27 +301,18 @@ function Editor({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (
 }
 
 function Auth({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: (p: Page) => void }) {
-  const [signup, setSignup] = useState(true);
   return (
     <main className="auth-page">
       <div className="auth-top"><Logo onClick={() => go("home")} /><ThemeToggle theme={theme} toggle={toggle} /></div>
       <div className="auth-scribble one">✦</div><div className="auth-scribble two">↗</div>
-      <section className="auth-card">
-        <div className="auth-badge">{signup ? "NEW MAIN CHARACTER" : "THEY’RE BACK"}</div>
-        <h1>{signup ? <>GET YOUR<br /><span>RIZZ UP.</span></> : <>WELCOME BACK,<br /><span>SIGMA.</span></>}</h1>
-        <p>{signup ? "Join the database with absolutely zero chill." : "Your lobbies missed you. Lock back in."}</p>
-        <form onSubmit={(e) => e.preventDefault()}>
-          {signup && <Field label="WHAT DO WE CALL YOU?"><input placeholder="main character" /></Field>}
-          <Field label="EMAIL"><input type="email" placeholder="you@ate.com" /></Field>
-          <Field label="PASSWORD"><input type="password" placeholder="••••••••••••" /></Field>
-          <Button>START COOKING <Icon name="arrow" /></Button>
-        </form>
-        <div className="auth-divider"><span>OR BE NORMAL</span></div>
-        <Button tone="plain"><Icon name="github" /> CONTINUE WITH GITHUB</Button>
-        <p className="auth-switch">{signup ? "Already got aura?" : "New to the function?"} <button onClick={() => setSignup(!signup)}>{signup ? "LOG IN" : "SIGN UP"}</button></p>
-        <small>🔒 No cap, we don’t sell your data.</small>
+      <section className="auth-card coming-soon-card">
+        <div className="auth-badge">LOCAL-ONLY V1</div>
+        <h1>THE UI IS<br /><span>COMING SOON.</span></h1>
+        <p>Accounts and sign-in are not part of Rizzbase V1. This product interface is still a preview and does not connect to the local engine.</p>
+        <Button tone="plain" onClick={() => go("home")}>BACK TO HOME <Icon name="arrow" /></Button>
+        <small>Use the Go engine or TypeScript SDK to work with local Project files.</small>
       </section>
-      <div className="auth-quote">“the database is lowkey serving”<b>— every developer, probably</b></div>
+      <div className="auth-quote">“local files. encrypted. no cloud drama.”<b>— Rizzbase V1</b></div>
     </main>
   );
 }
@@ -324,6 +326,7 @@ function Pricing({ theme, toggle, go }: { theme: Theme; toggle: () => void; go: 
   return (
     <>
       <Header theme={theme} toggle={toggle} go={go} />
+      <ComingSoonNotice message="This pricing page is a preview. Rizzbase V1 is a local library and has no hosted plans, accounts, or realtime service." />
       <main className="pricing-page">
         <div className="pricing-head"><span>PRICING WITHOUT THE JUMPSCARE</span><h1>PICK YOUR<br /><mark>AURA LEVEL.</mark></h1><p>No weird fees. No “contact sales.” Just vibes and databases.</p><div className="billing"><button className="active">MONTHLY</button><button>YEARLY <b>-20%</b></button></div></div>
         <div className="pricing-grid">

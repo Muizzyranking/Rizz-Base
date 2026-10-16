@@ -5,8 +5,9 @@ Brainrot-encoded `.rizz` file on your computer. There is no cloud service,
 network database, account or realtime connection.
 
 V1 includes the Go engine and CLI, a TypeScript/Node.js SDK, Lobby and Yap
-operations, and simple in-memory Yap queries. The existing React interface is
-separate and is not connected to the engine.
+operations, and simple in-memory Yap queries. The React product UI is a
+Coming Soon preview; its screens use mock data and are not wired to the local
+database engine.
 
 ## Install
 

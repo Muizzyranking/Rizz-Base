@@ -182,6 +182,6 @@ format details are in [FORMAT.md](FORMAT.md).
 
 Rizzbase is local-only. It does not provide a server, realtime or multi-user
 features, account management, remote backups, schema enforcement, or indexes.
-The React UI in this repository is not wired to the engine. For the Go API,
-CLI request protocol, file-size limit and atomic write details, see
-[FORMAT.md](FORMAT.md).
+The React product UI is marked Coming Soon: its dashboard uses mock data and
+is not wired to the local engine. For the Go API, CLI request protocol,
+file-size limit and atomic write details, see [FORMAT.md](FORMAT.md).

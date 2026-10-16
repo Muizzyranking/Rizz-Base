@@ -1,8 +1,8 @@
 # Rizzbase project
 
-The imported React/Vite interface stays in its original structure.
-The user requested incremental development of a local Go database engine,
-with a TypeScript SDK later, not deployment or UI setup.
+The imported React/Vite interface stays in its original structure. It is a
+Coming Soon mockup, uses sample data, and is not connected to the local Go
+engine or SDK. Do not present mock interactions as real database operations.
 
 ## Current development commands
 
@@ -13,7 +13,7 @@ Go 1.24+ is required. The engine uses only the Go standard library.
 - CLI: `cd engine && go run ./cmd/rizzbase < /path/to/private-request.json`
 
 See README.md for create/open request fields, file-format details, and limitations.
-No web/server workflow is needed for this CLI/library milestone.
+The UI preview runs with the `Start application` workflow on port 5000.
 Do not wire the imported UI to pretend database operations or use SESSION_SECRET
 as an encryption key. Passphrases belong to individual projects and are passed
 privately via stdin by callers.
