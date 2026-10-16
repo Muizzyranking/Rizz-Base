@@ -151,7 +151,7 @@ func writeAtomically(path string, data []byte, replace bool) error {
 
 func validatePath(path string) error {
 	if filepath.Ext(path) != ".rizz" {
-		return errors.New("project path must end in .rizz")
+		return errors.New("Invalid project path: expected a .rizz file.")
 	}
 	return nil
 }

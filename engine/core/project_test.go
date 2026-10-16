@@ -64,6 +64,57 @@ func TestCreateAndReopen(t *testing.T) {
 	}
 }
 
+func TestImportProjectFromJSONBackup(t *testing.T) {
+	dir := t.TempDir()
+	source := filepath.Join(dir, "source.rizz")
+	const passphrase = "backup-test-passphrase"
+	project, err := CreateProject(source, "backup project", passphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lobby, err := CreateLobby(source, passphrase, "general")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := CreateYap(source, passphrase, lobby.ID, "welcome", map[string]any{"message": "hello"}); err != nil {
+		t.Fatal(err)
+	}
+	project, err = OpenProject(source, passphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	backup, err := json.Marshal(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	backupPath := filepath.Join(dir, "backup.json")
+	if err := os.WriteFile(backupPath, backup, 0600); err != nil {
+		t.Fatal(err)
+	}
+	destination := filepath.Join(dir, "restored.rizz")
+	restored, err := ImportProject(destination, "new-passphrase", backupPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restoredJSON, _ := json.Marshal(restored)
+	if !bytes.Equal(backup, restoredJSON) {
+		t.Fatalf("imported data differs:\n%s\n%s", backup, restoredJSON)
+	}
+	if _, err := OpenProject(destination, "new-passphrase"); err != nil {
+		t.Fatalf("imported project cannot be opened: %v", err)
+	}
+	if _, err := ImportProject(destination, "another-passphrase", backupPath); !errors.Is(err, os.ErrExist) {
+		t.Fatalf("import replaced an existing project: %v", err)
+	}
+	invalidPath := filepath.Join(dir, "invalid.json")
+	if err := os.WriteFile(invalidPath, []byte(`{"version":99}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ImportProject(filepath.Join(dir, "invalid.rizz"), "passphrase", invalidPath); !errors.Is(err, ErrInvalidBackup) {
+		t.Fatalf("invalid backup accepted: %v", err)
+	}
+}
+
 func TestProjectValidation(t *testing.T) {
 	dir := t.TempDir()
 	for _, tc := range []struct{ file, name, pass string }{

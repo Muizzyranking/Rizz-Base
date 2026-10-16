@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -43,6 +44,10 @@ func TestQueryYaps(t *testing.T) {
 		"b": `{"score":3,"user":{"active":true}}`,
 		"c": `{"score":4,"user":{"active":false}}`,
 		"d": `null`,
+		"e": `{"score":2,"user":{"active":false}}`,
+		"f": `{"other":true}`,
+		"g": `{"score":"alpha"}`,
+		"h": `{"score":"beta"}`,
 	} {
 		if err := CreateYap(path, "test-only", lobby.ID, id, json.RawMessage(data)); err != nil {
 			t.Fatal(err)
@@ -55,7 +60,7 @@ func TestQueryYaps(t *testing.T) {
 		count   int
 		invalid bool
 	}{
-		{QueryOptions{}, 4, false},
+		{QueryOptions{}, 8, false},
 		{QueryOptions{Where: filters}, 2, false},
 		{QueryOptions{Where: filters, Limit: &one}, 1, false},
 		{QueryOptions{Limit: &zero}, 0, false},
@@ -64,6 +69,8 @@ func TestQueryYaps(t *testing.T) {
 		{QueryOptions{Where: []Filter{{"score", "bad", json.RawMessage(`2`)}}}, 0, true},
 		{QueryOptions{Where: []Filter{{"user..active", "==", json.RawMessage(`true`)}}}, 0, true},
 		{QueryOptions{Where: []Filter{{"score", "==", nil}}}, 0, true},
+		{QueryOptions{OrderBy: &OrderBy{Field: "score", Direction: "up"}}, 0, true},
+		{QueryOptions{OrderBy: &OrderBy{Field: "user..score", Direction: "asc"}}, 0, true},
 	} {
 		result, err := QueryYaps(path, "test-only", lobby.ID, tc.options)
 		if (err != nil) != tc.invalid {
@@ -75,6 +82,36 @@ func TestQueryYaps(t *testing.T) {
 		if tc.count > 0 && result[0].ID != "a" {
 			t.Fatal("unstable ordering")
 		}
+	}
+	for _, tc := range []struct {
+		direction string
+		want      []string
+	}{
+		{"asc", []string{"a", "e", "b", "c", "g", "h", "d", "f"}},
+		{"desc", []string{"c", "b", "a", "e", "h", "g", "d", "f"}},
+	} {
+		result, err := QueryYaps(path, "test-only", lobby.ID, QueryOptions{
+			OrderBy: &OrderBy{Field: "score", Direction: tc.direction},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := make([]string, len(result))
+		for i, yap := range result {
+			got[i] = yap.ID
+		}
+		if !reflect.DeepEqual(got, tc.want) {
+			t.Fatalf("%s order = %v, want %v", tc.direction, got, tc.want)
+		}
+	}
+	limit := 1
+	result, err := QueryYaps(path, "test-only", lobby.ID, QueryOptions{
+		Where:   []Filter{{"score", ">=", json.RawMessage(`3`)}},
+		OrderBy: &OrderBy{Field: "score", Direction: "desc"},
+		Limit:   &limit,
+	})
+	if err != nil || len(result) != 1 || result[0].ID != "c" {
+		t.Fatalf("ordered filter+limit = %v, %v", result, err)
 	}
 	if _, err := QueryYaps(path, "wrong", lobby.ID, QueryOptions{}); err == nil {
 		t.Fatal("accepted wrong passphrase")

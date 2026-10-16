@@ -54,3 +54,13 @@ test("rejects a binary whose bytes do not match its release checksum", async () 
 test("rejects non-HTTPS mirrors", async () => {
   await assert.rejects(ensureBinary({ binaryDownloadBaseUrl: "http://insecure.example" }), e => e.code === "INVALID_ARGUMENT");
 });
+
+test("reports a clear message when the matching release is unavailable", async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), "rizz-cache-"));
+  directories.push(cacheDir);
+  global.fetch = async () => new Response("not found", { status: 404 });
+  await assert.rejects(
+    ensureBinary({ cacheDir, binaryDownloadBaseUrl: root }),
+    e => e.code === "BINARY_DOWNLOAD_FAILED" && e.message.includes("Binary download failed"),
+  );
+});

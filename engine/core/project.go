@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -37,11 +38,50 @@ type Yap struct {
 }
 
 var (
-	ErrLobbyNotFound = errors.New("lobby not found")
-	ErrLobbyExists   = errors.New("lobby already exists")
-	ErrYapNotFound   = errors.New("yap not found")
-	ErrYapExists     = errors.New("yap already exists")
+	ErrLobbyNotFound = errors.New("Lobby not found.")
+	ErrLobbyExists   = errors.New("Lobby already exists.")
+	ErrYapNotFound   = errors.New("Yap not found.")
+	ErrYapExists     = errors.New("Yap already exists.")
+	ErrInvalidBackup = errors.New("Invalid JSON project backup.")
 )
+
+// ImportProject validates a decrypted JSON backup and creates a new encrypted
+// project. Existing project files are never overwritten.
+func ImportProject(path, passphrase, backupPath string) (*Project, error) {
+	file, err := os.Open(backupPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() || info.Size() > storage.MaxFileSize {
+		return nil, ErrInvalidBackup
+	}
+	data, err := io.ReadAll(io.LimitReader(file, storage.MaxFileSize+1))
+	if err != nil {
+		return nil, err
+	}
+	defer clear(data)
+	if len(data) > storage.MaxFileSize {
+		return nil, ErrInvalidBackup
+	}
+	project, err := decodeProject(data)
+	if err != nil {
+		return nil, ErrInvalidBackup
+	}
+	plaintext, err := json.Marshal(project)
+	if err != nil {
+		return nil, fmt.Errorf("encode imported project: %w", err)
+	}
+	defer clear(plaintext)
+	if err := storage.Create(path, passphrase, plaintext); err != nil {
+		return nil, err
+	}
+	return project, nil
+}
 
 func CreateProject(path, name, passphrase string) (*Project, error) {
 	name = strings.TrimSpace(name)
