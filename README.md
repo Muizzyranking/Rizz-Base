@@ -119,5 +119,5 @@ OS/architecture variants when a matching version tag is pushed; the current
 SDK version expects `v1.0.0`.
 
 See [SDK guide](docs/SDK.md), [file format and Go API](docs/FORMAT.md),
-[contributing](CONTRIBUTING.md) and [security](SECURITY.md). No software license
-has been selected; ask the repository owner before redistributing this code.
+[contributing](CONTRIBUTING.md) and [security](SECURITY.md). Rizzbase is
+licensed under the [MIT License](LICENSE).
