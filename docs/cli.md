@@ -67,14 +67,19 @@ Error codes: `AUTHENTICATION_FAILED`, `INVALID_FORMAT`, `PROJECT_BUSY`, `LOBBY_N
 
 ## Examples
 
-Create then write (each block is one process):
+Read the passphrase without echoing it, then construct each request from stdin.
+The passphrase is not stored in shell history or passed as a process argument:
 
 ```sh
-echo '{"operation":"create","path":"./demo.rizz","passphrase":"s3cret","name":"My project"}' | rizzbase
-echo '{"operation":"lobby.create","path":"./demo.rizz","passphrase":"s3cret","name":"general"}' | rizzbase
+read -r -s -p "Project passphrase: " RIZZBASE_PASSPHRASE
+printf '\n'
+printf '%s' "$RIZZBASE_PASSPHRASE" | jq -Rs '{operation:"create",path:"./demo.rizz",passphrase:.,name:"My project"}' | rizzbase
+printf '%s' "$RIZZBASE_PASSPHRASE" | jq -Rs '{operation:"lobby.create",path:"./demo.rizz",passphrase:.,name:"general"}' | rizzbase
+unset RIZZBASE_PASSPHRASE
 ```
 
-Use `jq` to avoid leaking secrets into shell history files where possible, and prefer reading the passphrase from a prompt or file descriptor in scripts.
+These Bash/Zsh commands require `jq`. In other environments, use a private
+prompt or secret manager and pass the request to `rizzbase` through stdin.
 
 Query with two filters, an ordering, and a limit:
 
@@ -82,7 +87,7 @@ Query with two filters, an ordering, and a limit:
 {
   "operation": "yap.query",
   "path": "./demo.rizz",
-  "passphrase": "s3cret",
+  "passphrase": "<provide privately>",
   "lobbyId": "LOBBY-ID",
   "query": {
     "where": [
