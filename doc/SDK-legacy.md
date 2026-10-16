@@ -4,6 +4,11 @@ The SDK is a local Node.js wrapper around Rizzbase's Go engine. It never starts
 a network database. It invokes the engine once per operation and stores data
 in the `.rizz` file at the path you provide.
 
+The current repository source targets SDK `1.1.0`. Until the matching package
+and engine release are published, `npm install rizzbase` installs `1.0.0`,
+which does not yet include `orderBy`, JSON export, or restore. The local source
+build and examples below exercise the `1.1.0` API.
+
 ## Requirements and installation
 
 - Node.js 20 or newer.
@@ -47,6 +52,9 @@ after constructing an instance; they read the existing project.
 The SDK constructor is `new Rizzbase(path, passphrase, options?)`. Relative
 paths resolve from the current working directory.
 
+For complete runnable Notes and Todo examples, see the repository
+[examples folder](../examples/README.md).
+
 ### Options
 
 ```ts
@@ -86,6 +94,16 @@ try {
 - `create(name): Promise<Project>`: create a new encrypted project; never
   overwrites an existing file.
 - `open(): Promise<Project>`: decrypt and return the Project metadata.
+- `export(backupPath): Promise<void>`: write a decrypted JSON backup without
+  overwriting an existing file.
+- `importBackup(backupPath): Promise<Project>`: validate a JSON backup and
+  encrypt it into this instance's new `.rizz` path.
+
+Errors reject as `RizzbaseError` with a stable code, for example
+`INVALID_ARGUMENT` for invalid paths or query options, `LOBBY_NOT_FOUND` and
+`YAP_NOT_FOUND` for missing records, or `BINARY_DOWNLOAD_FAILED` when the
+version-matched engine release cannot be downloaded. Error messages do not
+include the passphrase.
 
 ### Lobby
 
@@ -118,6 +136,7 @@ const results = await db.queryYaps("LOBBY-ID", {
     { field: "user.active", operator: "==", value: true },
     { field: "score", operator: ">=", value: 10 },
   ],
+  orderBy: { field: "score", direction: "desc" },
   limit: 20,
 });
 ```
@@ -128,18 +147,44 @@ Or use the immutable query builder:
 const results = await db.query("LOBBY-ID")
   .where("user.active", "==", true)
   .where("score", ">=", 10)
+  .orderBy("score", "desc")
   .limit(20)
   .exec();
 ```
 
+`orderBy(field, direction)` accepts `"asc"` or `"desc"`; the direction defaults
+to `"asc"`. Numeric and string field values sort within their respective types,
+with numbers before strings. Missing fields and values that are not numbers or
+strings sort last in either direction. Ties are sorted by Yap ID. Filters are
+applied first, then ordering, then the optional non-negative safe-integer
+limit. Queries decrypt and scan the Lobby in memory; there are no indexes,
+joins, or query plans.
+
 Operators are `==`, `!=`, `>`, `>=`, `<` and `<=`. Multiple filters are ANDed.
 Use dot-separated paths for nested JSON object fields. All six comparisons
-support JSON equality for primitives, arrays and objects. Ordering applies
-only to values where both sides are numbers or both are strings; it never
-coerces types. Missing fields never match (including `!=`). A limit is a
-non-negative safe integer and is applied after filtering. Results are sorted by
-Yap ID before a limit is applied. Queries decrypt and scan the Lobby in memory;
-there are no indexes, joins, sorting options or query plans in V1.
+support JSON equality for primitives, arrays and objects. Filter comparisons
+apply only to values where both sides are numbers or both are strings; they
+never coerce types. Missing fields do not match any filter, including `!=`.
+
+### JSON export and restore
+
+`export()` writes a decrypted JSON snapshot of the whole Project. The backup
+contains the project name, metadata, Lobbies, and all Yap data in plain text:
+
+```ts
+await db.export("./backup.json");
+
+// Restore to a new encrypted Project using a new passphrase.
+const restored = new Rizzbase("./restored.rizz", getPassphrasePrivately());
+await restored.importBackup("./backup.json");
+```
+
+Exports and imports refuse to overwrite existing files. Exported files are
+created with owner-only permissions where supported, and JSON backups are
+limited to 64 MiB. Treat the backup as sensitive plaintext: store it securely,
+do not commit it, and remove it when no longer needed. Import validates the
+complete Project structure before creating the encrypted destination file.
+The destination must be a `.rizz` path; the backup must be a `.json` path.
 
 ## Project / Lobby / Yap
 
@@ -164,7 +209,8 @@ format details are in [FORMAT.md](FORMAT.md).
 - The local SDK sends the passphrase over the child process's stdin. It is not
   put in the process arguments or environment. Do not expose the SDK through
   an untrusted server endpoint.
-- There is no recovery if the passphrase is lost. Keep secure backups.
+- There is no recovery if the passphrase is lost. Keep secure encrypted
+  backups; JSON exports are decrypted and need extra protection.
 - Projects are local files with a 64 MiB encoded-file limit and owner-only
   permissions on Unix. Project writes use an adjacent lock; concurrent writers
   fail rather than overwrite each other. Check for an active process before

@@ -17,6 +17,7 @@ import (
 type request struct {
 	Operation  string            `json:"operation"`
 	Path       string            `json:"path"`
+	BackupPath string            `json:"backupPath,omitempty"`
 	LobbyID    string            `json:"lobbyId,omitempty"`
 	YapID      string            `json:"yapId,omitempty"`
 	Name       string            `json:"name,omitempty"`
@@ -59,7 +60,7 @@ func run(input io.Reader, output io.Writer) error {
 	}
 	for field := range fields {
 		switch field {
-		case "operation", "path", "lobbyId", "yapId", "name", "data", "passphrase", "query":
+		case "operation", "path", "backupPath", "lobbyId", "yapId", "name", "data", "passphrase", "query":
 		default:
 			return errors.New("unknown request field")
 		}
@@ -70,6 +71,8 @@ func run(input io.Reader, output io.Writer) error {
 		res.Project, err = core.CreateProject(req.Path, req.Name, req.Passphrase)
 	case "open":
 		res.Project, err = core.OpenProject(req.Path, req.Passphrase)
+	case "project.import":
+		res.Project, err = core.ImportProject(req.Path, req.Passphrase, req.BackupPath)
 	case "lobby.create":
 		var lobby core.Lobby
 		lobby, err = core.CreateLobby(req.Path, req.Passphrase, req.Name)
@@ -103,7 +106,7 @@ func run(input io.Reader, output io.Writer) error {
 	case "yap.delete":
 		err = core.DeleteYap(req.Path, req.Passphrase, req.LobbyID, req.YapID)
 	default:
-		return errors.New("operation must be create, open, lobby.create/list/delete, or yap.create/get/list/update/delete/query")
+		return errors.New("unsupported engine operation")
 	}
 	if err != nil {
 		return err
@@ -113,7 +116,7 @@ func run(input io.Reader, output io.Writer) error {
 
 func main() {
 	if len(os.Args) != 1 {
-		fmt.Fprintln(os.Stderr, "Usage: rizzbase < request.json (one create/open/lobby/yap request via stdin)")
+		fmt.Fprintln(os.Stderr, "Usage: rizzbase < request.json (one engine request via stdin)")
 		os.Exit(2)
 	}
 	if err := run(os.Stdin, os.Stdout); err != nil {
@@ -134,6 +137,8 @@ func errorCode(err error) string {
 		return "LOBBY_NOT_FOUND"
 	case errors.Is(err, core.ErrYapNotFound):
 		return "YAP_NOT_FOUND"
+	case errors.Is(err, core.ErrInvalidBackup):
+		return "INVALID_BACKUP"
 	case errors.Is(err, core.ErrYapExists):
 		return "YAP_EXISTS"
 	case errors.Is(err, os.ErrNotExist):

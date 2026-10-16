@@ -6,7 +6,7 @@ import { RizzbaseError } from "./errors.js";
 import type { RizzbaseOptions } from "./types.js";
 
 // Must match the package version and GitHub release tag. No "latest" downloads.
-export const ENGINE_VERSION = "1.0.0";
+export const ENGINE_VERSION = "1.1.0";
 const RELEASES = "https://github.com/pazti/Rizz-Base/releases/download";
 const pending = new Map<string, Promise<string>>();
 
@@ -95,7 +95,7 @@ async function download(base: string, directory: string, destination: string, as
   } catch (error) {
     if (error instanceof RizzbaseError) throw error;
     throw new RizzbaseError(
-      `Cannot obtain the Rizzbase v${ENGINE_VERSION} engine. Check release availability/network access or provide binaryPath.`,
+      `Binary download failed for Rizzbase v${ENGINE_VERSION}. Check the matching GitHub release and network access, or provide binaryPath.`,
       "BINARY_DOWNLOAD_FAILED", { cause: error },
     );
   } finally {

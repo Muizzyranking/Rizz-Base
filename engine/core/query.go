@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 )
 
@@ -18,16 +19,37 @@ type Filter struct {
 
 // QueryOptions combines filters with AND. Nil Limit means unlimited.
 type QueryOptions struct {
-	Where []Filter `json:"where,omitempty"`
-	Limit *int     `json:"limit,omitempty"`
+	Where   []Filter `json:"where,omitempty"`
+	OrderBy *OrderBy `json:"orderBy,omitempty"`
+	Limit   *int     `json:"limit,omitempty"`
 }
 
-// QueryYaps filters a snapshot in Yap-ID order, without changing the file.
+// OrderBy sorts matching Yaps by a JSON number or string field.
+type OrderBy struct {
+	Field     string `json:"field"`
+	Direction string `json:"direction"`
+}
+
+// QueryYaps filters and sorts a snapshot without changing the file.
 // Missing fields never match, including !=. Ordering comparisons are only
-// defined between two numbers or two strings, with no type coercion.
+// defined between two numbers or two strings, with no type coercion. Missing
+// and unsupported values sort last; equal values retain Yap-ID order.
 func QueryYaps(path, passphrase, lobbyID string, options QueryOptions) ([]Yap, error) {
 	if options.Limit != nil && *options.Limit < 0 {
 		return nil, errors.New("query limit must be non-negative")
+	}
+	if options.OrderBy != nil {
+		if strings.TrimSpace(options.OrderBy.Field) == "" {
+			return nil, errors.New("orderBy field must not be empty")
+		}
+		for _, part := range strings.Split(options.OrderBy.Field, ".") {
+			if strings.TrimSpace(part) == "" {
+				return nil, errors.New("orderBy field must have non-empty path segments")
+			}
+		}
+		if options.OrderBy.Direction != "asc" && options.OrderBy.Direction != "desc" {
+			return nil, errors.New("orderBy direction must be asc or desc")
+		}
 	}
 	values := make([]any, len(options.Where))
 	for i, filter := range options.Where {
@@ -39,7 +61,7 @@ func QueryYaps(path, passphrase, lobbyID string, options QueryOptions) ([]Yap, e
 		switch filter.Operator {
 		case "==", "!=", ">", ">=", "<", "<=":
 		default:
-			return nil, fmt.Errorf("unsupported query operator: %s", filter.Operator)
+			return nil, fmt.Errorf("invalid query operator %q; use ==, !=, >, >=, <, or <=", filter.Operator)
 		}
 		value, err := decodeValue(filter.Value)
 		if err != nil {
@@ -52,8 +74,9 @@ func QueryYaps(path, passphrase, lobbyID string, options QueryOptions) ([]Yap, e
 		return nil, err
 	}
 	result := make([]Yap, 0)
+	orderValues := make(map[string]orderedValue)
 	for _, yap := range yaps {
-		if options.Limit != nil && len(result) >= *options.Limit {
+		if options.OrderBy == nil && options.Limit != nil && len(result) >= *options.Limit {
 			break
 		}
 		document, err := decodeValue(yap.Data)
@@ -70,9 +93,84 @@ func QueryYaps(path, passphrase, lobbyID string, options QueryOptions) ([]Yap, e
 		}
 		if matches {
 			result = append(result, yap)
+			if options.OrderBy != nil {
+				value, exists := fieldValue(document, options.OrderBy.Field)
+				class, comparable := orderValue(value, exists)
+				orderValues[yap.ID] = orderedValue{class: class, value: comparable}
+			}
 		}
 	}
+	if options.OrderBy != nil {
+		orderBy := options.OrderBy
+		sort.Slice(result, func(i, j int) bool {
+			left := orderValues[result[i].ID]
+			right := orderValues[result[j].ID]
+			if left.class != right.class {
+				return left.class < right.class
+			}
+			if left.class == 2 {
+				return result[i].ID < result[j].ID
+			}
+			comparison := compareOrder(left.value, right.value)
+			if orderBy.Direction == "desc" {
+				if comparison != 0 {
+					return comparison > 0
+				}
+				return result[i].ID < result[j].ID
+			}
+			if comparison == 0 {
+				return result[i].ID < result[j].ID
+			}
+			return comparison < 0
+		})
+	}
+	if options.Limit != nil && len(result) > *options.Limit {
+		result = result[:*options.Limit]
+	}
 	return result, nil
+}
+
+type orderedValue struct {
+	class int
+	value any
+}
+
+func orderValue(value any, exists bool) (int, any) {
+	if !exists {
+		return 2, nil
+	}
+	switch value.(type) {
+	case json.Number:
+		return 0, value
+	case string:
+		return 1, value
+	default:
+		return 2, nil
+	}
+}
+
+func compareOrder(a, b any) int {
+	switch left := a.(type) {
+	case json.Number:
+		right, ok := b.(json.Number)
+		if !ok {
+			return 0
+		}
+		l, lok := new(big.Rat).SetString(string(left))
+		r, rok := new(big.Rat).SetString(string(right))
+		if !lok || !rok {
+			return 0
+		}
+		return l.Cmp(r)
+	case string:
+		right, ok := b.(string)
+		if !ok {
+			return 0
+		}
+		return strings.Compare(left, right)
+	default:
+		return 0
+	}
 }
 
 func decodeValue(data []byte) (any, error) {

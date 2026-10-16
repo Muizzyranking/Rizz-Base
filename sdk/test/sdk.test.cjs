@@ -1,5 +1,5 @@
 const { execFileSync } = require("node:child_process");
-const { mkdtemp, rm, writeFile } = require("node:fs/promises");
+const { mkdtemp, readFile, rm, stat, writeFile } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const { after, before, test } = require("node:test");
@@ -31,10 +31,39 @@ test("SDK covers project, Lobby, Yap and query operations", async () => {
   assert.deepEqual((await db.listYaps(lobby.id)).map(y => y.id), ["one", "three", "two"]);
   assert.deepEqual((await db.query(lobby.id).where("score", ">=", 2).where("user.active", "==", true).limit(1).exec()).map(y => y.id), ["one"]);
   assert.deepEqual((await db.queryYaps(lobby.id, { where: [{ field: "score", operator: ">", value: 5 }] })).map(y => y.id), ["three"]);
+  assert.deepEqual((await db.query(lobby.id).orderBy("score").exec()).map(y => y.id), ["one", "two", "three"]);
+  assert.deepEqual((await db.query(lobby.id)
+    .where("score", ">=", 2)
+    .orderBy("score", "desc")
+    .limit(2)
+    .exec()).map(y => y.id), ["three", "two"]);
+  assert.deepEqual((await db.queryYaps(lobby.id, {
+    orderBy: { field: "score", direction: "desc" },
+    limit: 1,
+  })).map(y => y.id), ["three"]);
   await db.updateYap(lobby.id, "one", { score: 3 });
   assert.deepEqual(await db.getYap(lobby.id, "one"), { score: 3 });
   assert.deepEqual((await db.listLobbies()).map(l => l.id), [lobby.id]);
-  assert.equal((await db.open()).name, "SDK test");
+  const project = await db.open();
+  assert.equal(project.name, "SDK test");
+  const backupPath = join(directory, "backup.json");
+  await db.export(backupPath);
+  const backupContents = await readFile(backupPath, "utf8");
+  assert.deepEqual(JSON.parse(backupContents), project);
+  assert.equal(backupContents.includes("SDK test passphrase"), false);
+  if (process.platform !== "win32") assert.equal((await stat(backupPath)).mode & 0o777, 0o600);
+  await assert.rejects(db.export(backupPath), e => e.code === "FILE_EXISTS");
+  const restoredPath = join(directory, "restored.rizz");
+  const restored = new Rizzbase(restoredPath, "restored passphrase", { binaryPath: binary });
+  assert.deepEqual(await restored.importBackup(backupPath), project);
+  assert.deepEqual(await restored.open(), project);
+  await assert.rejects(restored.importBackup(backupPath), e => e.code === "FILE_EXISTS");
+  const invalidBackup = join(directory, "invalid.json");
+  await writeFile(invalidBackup, `{"version":99}`);
+  await assert.rejects(
+    new Rizzbase(join(directory, "invalid.rizz"), "passphrase", { binaryPath: binary }).importBackup(invalidBackup),
+    e => e.code === "INVALID_BACKUP",
+  );
   await db.deleteYap(lobby.id, "one");
   await db.deleteLobby(lobby.id);
   assert.deepEqual(await db.listLobbies(), []);
@@ -46,9 +75,11 @@ test("SDK reports typed engine and input errors without exposing passphrase", as
   await db.create("Errors");
   await assert.rejects(new Rizzbase(path, "wrong passphrase", { binaryPath: binary }).open(),
     e => e instanceof RizzbaseError && e.code === "AUTHENTICATION_FAILED" && !e.message.includes("wrong passphrase"));
-  await assert.rejects(db.getYap("missing", "y"), e => e.code === "LOBBY_NOT_FOUND");
-  assert.throws(() => new Rizzbase("missing.txt", "secret"), e => e.code === "INVALID_ARGUMENT");
+  await assert.rejects(db.getYap("missing", "y"), e => e.code === "LOBBY_NOT_FOUND" && e.message === "Lobby not found.");
+  assert.throws(() => new Rizzbase("missing.txt", "secret"), e => e.code === "INVALID_ARGUMENT" && e.message.includes("Invalid project path"));
   assert.throws(() => db.query("lobby").limit(-1), e => e.code === "INVALID_ARGUMENT");
+  assert.throws(() => db.query("lobby").orderBy("score", "sideways"), e => e.code === "INVALID_ARGUMENT");
+  await assert.rejects(db.queryYaps("lobby", { where: [{ field: "x", operator: "between", value: 1 }] }), e => e.code === "INVALID_ARGUMENT" && e.message.includes("Invalid query operator"));
   const circular = {}; circular.self = circular;
   await assert.rejects(db.createYap("lobby", "circular", circular), e => e.code === "INVALID_ARGUMENT");
   assert.equal((await (await import("node:fs/promises")).readFile(path, "utf8")).includes("never-echo-this"), false);

@@ -2,12 +2,23 @@
 
 Rizzbase is a local-first database for Node.js. Each Project is one encrypted,
 Brainrot-encoded `.rizz` file on your computer. There is no cloud service,
-network database, account or realtime connection.
+network database, account, or realtime connection.
 
-V1 includes the Go engine and CLI, a TypeScript/Node.js SDK, Lobby and Yap
-operations, and simple in-memory Yap queries. The React product UI is a
-Coming Soon preview; its sample screens are not wired to the local database
-engine and do not represent live user, usage, pricing, or performance figures.
+## Why Rizzbase?
+
+- **Your data stays local.** No hosted database, account, or network service.
+- **Encrypted Projects.** AES-256-GCM protects one portable `.rizz` file with
+  a key derived from your passphrase.
+- **Ordinary TypeScript.** Store JSON documents and query them with a small,
+  typed API backed by a Go engine.
+- **Back up on your terms.** Keep encrypted `.rizz` copies, or export a
+  decrypted JSON snapshot when you need an interoperable backup.
+- **Small, transparent scope.** Rizzbase is a local file library, not a
+  realtime cloud platform. Queries scan a Lobby in memory; there are no indexes.
+
+V1 includes the Go engine and CLI, the TypeScript/Node.js SDK, Project/Lobby/Yap
+operations, in-memory filters and ordering, and JSON export/restore. The React
+product UI is a preview and is not connected to local database files.
 
 ## Install
 
@@ -26,7 +37,72 @@ GitHub release contains the engine binaries and SHA-256 manifest:
 - [rizzbase on npm](https://www.npmjs.com/package/rizzbase)
 - [v1.0.0 GitHub release](https://github.com/pazti/Rizz-Base/releases/tag/v1.0.0)
 
-To build and test the SDK from this repository:
+The source in this repository now targets SDK `1.1.0`, which is not yet
+published. The new query ordering and JSON backup APIs become available from
+`npm install rizzbase` after the matching `v1.1.0` npm package and engine
+release are published. Until then, build the SDK locally as shown below.
+
+## 60-second quick start
+
+Requires Node.js 20+ and a supported macOS, Linux, or Windows x64/arm64
+machine. Install the published SDK:
+
+```sh
+npm install rizzbase
+read -rsp "Project passphrase: " RIZZBASE_PASSPHRASE
+printf '\n'
+export RIZZBASE_PASSPHRASE
+```
+
+These passphrase commands are for Bash/Zsh. In other environments, use a
+private prompt or secret manager. Do not commit the passphrase or put it in
+application arguments. Save this as `quick-start.mjs`:
+
+```js
+import { Rizzbase, RizzbaseError } from "rizzbase";
+
+const passphrase = process.env.RIZZBASE_PASSPHRASE;
+if (!passphrase) throw new Error("Set RIZZBASE_PASSPHRASE privately.");
+
+const db = new Rizzbase("./journal.rizz", passphrase);
+try {
+  await db.open();
+} catch (error) {
+  if (!(error instanceof RizzbaseError) || error.code !== "FILE_NOT_FOUND") throw error;
+  await db.create("Personal journal");
+}
+const notes = (await db.listLobbies()).find(lobby => lobby.name === "notes")
+  ?? await db.createLobby("notes");
+
+await db.createYap(notes.id, `note-${Date.now()}`, {
+  title: "Hello, local storage",
+  text: "This is encrypted in my local Project file.",
+  createdAt: new Date().toISOString(),
+});
+
+const latest = await db.query(notes.id)
+  .limit(10)
+  .exec();
+console.log(latest);
+```
+
+Run `node quick-start.mjs`. The example opens an existing Project if present;
+`create()` itself intentionally refuses to overwrite one.
+
+> **Version note:** The currently published `1.0.0` supports basic filters and
+> limits but does not yet include `orderBy` or JSON export/restore. Those APIs
+> are in the `1.1.0` source here and will be available after its npm package
+> and matching engine release are published.
+
+## Examples
+
+The repository includes interactive [Notes](examples/notes.mjs) and
+[Todo list](examples/todos.mjs) apps. They demonstrate persistent data,
+filtered/ordered queries, and updates. See [how to run the examples](examples/README.md);
+the current source examples use a local SDK and engine build until `1.1.0` is
+published.
+
+## Build and test from source
 
 ```sh
 cd sdk
@@ -44,30 +120,23 @@ directory if setting these manually. The app uses hash-based navigation, so it
 does not require server rewrites. The deployed UI remains a mock preview and
 does not connect to local `.rizz` files or provide hosted database features.
 
-## Quick start
+## Reopen an existing Project
 
 ```ts
 import { Rizzbase } from "rizzbase";
 
-const db = new Rizzbase("./my-project.rizz", "get-this-from-private-input");
-
-// Create a new Project once; on later runs, open the existing Project instead.
-await db.create("My project");
-const lobby = await db.createLobby("general");
-await db.createYap(lobby.id, "welcome", { message: "hello" });
-
-const welcome = await db.getYap<{ message: string }>(lobby.id, "welcome");
-const yaps = await db.query(lobby.id)
-  .where("message", "==", "hello")
-  .limit(10)
-  .exec();
-
-console.log(welcome.message, yaps.length);
+const passphrase = process.env.RIZZBASE_PASSPHRASE;
+if (!passphrase) throw new Error("Set RIZZBASE_PASSPHRASE privately.");
+const db = new Rizzbase("./journal.rizz", passphrase);
+const project = await db.open();
+const [notes] = await db.listLobbies();
+const recent = await db.query(notes.id).limit(10).exec();
+console.log(project.name, recent.length);
 ```
 
-`create()` does not overwrite an existing file. To use a Project in later runs,
-construct the SDK with the same path and passphrase, then call `open()` or any
-other operation. Read the [beginner-friendly guide and API reference](docs/SDK.md).
+`create()` is for first-time project setup and refuses to overwrite an existing
+file. Keep the project path and passphrase private. Read the
+[beginner-friendly guide and API reference](docs/SDK.md).
 
 ## Project vocabulary
 
@@ -78,20 +147,37 @@ other operation. Read the [beginner-friendly guide and API reference](docs/SDK.m
 ## Query example
 
 Filters are AND-combined, dot-separated paths access nested object fields, and
-the optional limit is applied after filtering. Results are sorted by Yap ID.
-Queries read the Lobby into memory; V1 has no indexes or persisted query engine.
+the optional limit is applied after filtering and ordering. Without `orderBy`,
+results are sorted by Yap ID. Queries read the Lobby into memory; V1 has no
+indexes or persisted query engine.
 
 ```ts
 const active = await db.query("YOUR-LOBBY-ID")
   .where("user.active", "==", true)
   .where("score", ">=", 10)
+  .orderBy("score", "desc")
   .limit(20)
   .exec();
 ```
 
 Supported operators: `==`, `!=`, `>`, `>=`, `<`, `<=`. Equality compares JSON
-values (including objects and arrays); ordering supports numbers and strings
-only. A missing field does not match any operator. See [query details](docs/SDK.md#queries).
+values (including objects and arrays); filter comparisons support numbers and
+strings. `orderBy` sorts by a numeric or string field before `limit`; see
+[query details](docs/SDK.md#queries).
+
+## JSON backup and restore
+
+```ts
+await db.export("./backup.json");
+
+const restored = new Rizzbase("./restored.rizz", getPassphrasePrivately());
+await restored.importBackup("./backup.json");
+```
+
+JSON backups contain decrypted project data. Store them securely, do not commit
+them, and remove them when no longer needed. Export and import refuse to
+overwrite files; restore creates an encrypted Project using the supplied
+passphrase. See [backup safety and limits](docs/SDK.md#json-export-and-restore).
 
 ## Security and limits
 
@@ -105,12 +191,13 @@ only. A missing field does not match any operator. See [query details](docs/SDK.
   against a versioned release manifest. Set `binaryPath` to use a build you
   obtained and trust yourself. Checksums detect corruption; they are not a
   signed provenance system.
-- Keep secure backups of `.rizz` files. A local file lock blocks a second
-  writer; after a crash, check that no process is still writing before manually
-  removing its adjacent `.lock` directory.
+- Keep secure backups of `.rizz` files. JSON export is also available, but it
+  contains decrypted data and must be protected accordingly. A local file lock
+  blocks a second writer; after a crash, check that no process is still writing
+  before manually removing its adjacent `.lock` directory.
 - Each operation's JSON request is limited to 64 KiB; query results are
   bounded by the 64 MiB encoded-project file limit.
-- This is local-only V1: no realtime, cloud storage, multi-user access, built-in
+- This is local-only V1: no realtime, cloud storage, multi-user access, remote
   backup, or UI connection. The Go API and CLI have their own documented limits.
 
 ## Develop this repository
@@ -129,7 +216,7 @@ npx tsc --noEmit --strict --target ES2022 --module Node16 \
 Go 1.24+ and Node.js 20+ are required. The SDK's tests build the local Go CLI
 and exercise it using temporary encrypted projects. Binary releases build six
 OS/architecture variants when a matching version tag is pushed; the current
-SDK version expects `v1.0.0`.
+source version expects `v1.1.0`.
 
 See [SDK guide](docs/SDK.md), [file format and Go API](docs/FORMAT.md),
 [contributing](CONTRIBUTING.md) and [security](SECURITY.md). Rizzbase is
