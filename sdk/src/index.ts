@@ -33,7 +33,7 @@ function validateQuery(options: QueryOptions): void {
   if (options.limit !== undefined && (!Number.isSafeInteger(options.limit) || options.limit < 0)) invalid("limit must be a non-negative safe integer.");
   if (options.where !== undefined && !Array.isArray(options.where)) invalid("where must be an array of filters.");
   for (const filter of options.where ?? []) {
-    if (!filter || typeof filter.field !== "string" || filter.field.split(".").some(segment => !segment.trim())) invalid("Query fields must have non-empty path segments.");
+    if (!filter || typeof filter.field !== "string" || filter.field.split(".").some((segment: string) => !segment.trim())) invalid("Query fields must have non-empty path segments.");
     if (!["==", "!=", ">", ">=", "<", "<="].includes(filter.operator)) invalid("Unsupported query operator.");
     validateJson(filter.value);
   }

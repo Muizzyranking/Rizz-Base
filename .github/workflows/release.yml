@@ -1,0 +1,77 @@
+name: Release Go engine binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: ""
+          - goos: linux
+            goarch: arm64
+            suffix: ""
+          - goos: darwin
+            goarch: amd64
+            suffix: ""
+          - goos: darwin
+            goarch: arm64
+            suffix: ""
+          - goos: windows
+            goarch: amd64
+            suffix: .exe
+          - goos: windows
+            goarch: arm64
+            suffix: .exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache-dependency-path: engine/go.mod
+      - name: Check tag matches the npm SDK version
+        run: |
+          SDK_VERSION="$(node -p "require('./sdk/package.json').version")"
+          ENGINE_VERSION="$(sed -n 's/.*ENGINE_VERSION = "\([^"]*\)".*/\1/p' sdk/src/binary.ts)"
+          test "$GITHUB_REF_NAME" = "v$SDK_VERSION"
+          test "$SDK_VERSION" = "$ENGINE_VERSION"
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p ../generated-artifacts
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" \
+            -o "../generated-artifacts/rizzbase-${GOOS}-${GOARCH}${{ matrix.suffix }}" ./cmd/rizzbase
+        working-directory: engine
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rizzbase-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: generated-artifacts/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: generated-artifacts
+          merge-multiple: true
+      - name: Create SHA-256 manifest
+        run: cd generated-artifacts && sha256sum rizzbase-* > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: generated-artifacts/*

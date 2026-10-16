@@ -1,0 +1,42 @@
+name: Go engine
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache-dependency-path: engine/go.mod
+      - run: go test -race ./...
+        working-directory: engine
+      - run: go vet ./...
+        working-directory: engine
+
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache-dependency-path: engine/go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install --ignore-scripts
+        working-directory: sdk
+      - run: npm run build
+        working-directory: sdk
+      - run: npm test
+        working-directory: sdk
+      - run: npm exec -- tsc --noEmit --strict --target ES2022 --module Node16 --moduleResolution Node16 --types node test/typecheck.ts
+        working-directory: sdk
